@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uplift Path — Tech Workflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Lexend+Deca:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2c3e50;
+    --ink-soft:#5b6b78;
+    --muted:#8a97a3;
+    --paper:#faf9f6;
+    --paper-card:#ffffff;
+    --line:#e3ded3;
+    --dot:#dcd6c8;
+    --teal:#08d1a7;
+    --teal-ink:#14503f;
+    --teal-tint:#f3fcf9;
+    --sidebar-bg:#f2efe7;
+    --sidebar-active:#ffffff;
+    --shadow: 0 1px 2px rgba(44,62,80,.06), 0 8px 20px -12px rgba(44,62,80,.16);
+    --cat-input:#8a97a3;   --cat-input-bg:#eef1f3;
+    --cat-ai:#8b5cf6;      --cat-ai-bg:#f4effe;
+    --cat-design:#0aa88a;  --cat-design-bg:#eafaf5;
+    --cat-dev:#2f6fed;     --cat-dev-bg:#eaf1ff;
+    --cat-build:#c2790f;   --cat-build-bg:#fdf3e4;
+    --cat-infra:#e2622f;   --cat-infra-bg:#fdece3;
+    --cat-output:#14503f;  --cat-output-bg:#f3fcf9;
+    --sidebar-w: 258px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Lexend Deca', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+  h1,h2,h3,.font-display{
+    font-family:'Playfair Display', Georgia, serif;
+    letter-spacing:-0.01em;
+  }
+  code, .mono{ font-family:'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace; }
+
+  .app{ display:flex; min-height:100vh; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:var(--sidebar-w);
+    flex:0 0 var(--sidebar-w);
+    background:var(--sidebar-bg);
+    border-right:1px solid var(--line);
+    padding:20px 14px;
+    position:sticky;
+    top:0;
+    align-self:flex-start;
+    height:100vh;
+    overflow-y:auto;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; padding:4px 8px 18px; }
+  .brand-mark{ width:28px;height:28px;border-radius:8px; background:linear-gradient(135deg, var(--teal), #019ed0); flex:0 0 28px; }
+  .brand-name{ font-size:13.5px; font-weight:600; line-height:1.2; }
+  .brand-sub{ font-size:11px; color:var(--muted); }
+  .side-section-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); padding:14px 10px 6px; font-weight:600; }
+  .side-item{ display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:8px; font-size:13px; color:var(--ink-soft); cursor:pointer; margin-bottom:2px; }
+  .side-item:hover{ background:rgba(0,0,0,.035); }
+  .side-item.active{ background:var(--sidebar-active); color:var(--ink); font-weight:600; box-shadow:var(--shadow); }
+  .side-item .dot{ width:6px;height:6px;border-radius:50%; background:currentColor; flex:0 0 6px; }
+  .side-item.disabled{ color:var(--muted); cursor:default; }
+  .side-item.disabled .badge{ margin-left:auto; font-size:9.5px; background:rgba(0,0,0,.06); padding:2px 6px; border-radius:999px; }
+  .outline-item{ display:flex; align-items:center; gap:7px; padding:6px 10px 6px 12px; font-size:12.5px; color:var(--ink-soft); text-decoration:none; border-left:2px solid transparent; margin-left:8px; }
+  .outline-item:hover{ color:var(--ink); border-left-color:var(--teal); }
+  .outline-item .sw{ width:8px;height:8px;border-radius:2px; flex:0 0 8px; }
+  .outline-num{ display:inline-block; width:16px; color:var(--muted); font-family:'JetBrains Mono', monospace; font-size:11px; }
+
+  .legend-box{ margin-top:16px; padding:12px; background:var(--sidebar-active); border-radius:10px; box-shadow:var(--shadow); }
+  .legend-title{ font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:8px; }
+  .legend-row{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-soft); padding:3px 0; }
+  .legend-swatch{ width:10px;height:10px;border-radius:3px;flex:0 0 10px; }
+
+  /* ---------- Main ---------- */
+  .main{ flex:1; min-width:0; }
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 40px; border-bottom:1px solid var(--line);
+    background:var(--paper); position:sticky; top:0; z-index:5;
+  }
+  .crumbs{ font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+  .crumbs b{ color:var(--ink); font-weight:600; }
+  .topbar-title{ font-size:21px; font-weight:600; margin-top:2px; }
+  .tab-strip{ display:flex; gap:6px; }
+  .tab{ font-size:12px; padding:6px 12px; border-radius:7px; background:var(--paper-card); border:1px solid var(--line); color:var(--ink-soft); }
+  .tab.active{ background:var(--ink); color:#fff; border-color:var(--ink); font-weight:500; }
+
+  .board{
+    background-image: radial-gradient(circle, var(--dot) 1.2px, transparent 1.2px);
+    background-size: 20px 20px;
+    padding:44px 40px 90px;
+  }
+  .intro{
+    max-width:700px;
+    margin:0 auto 40px;
+    text-align:center;
+  }
+  .intro p{ font-size:13.5px; color:var(--ink-soft); line-height:1.6; }
+  .intro .kicker{
+    display:inline-block; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--teal-ink); background:var(--teal-tint); border:1px solid var(--teal); padding:4px 12px; border-radius:999px; margin-bottom:14px;
+  }
+
+  /* ---------- Vertical timeline ---------- */
+  .timeline{ max-width:700px; margin:0 auto; position:relative; }
+
+  .phase-divider{
+    display:flex; align-items:center; gap:12px;
+    margin:38px 0 20px;
+  }
+  .phase-divider:first-child{ margin-top:0; }
+  .phase-divider .line{ flex:1; height:1px; background:var(--line); }
+  .phase-divider .label{
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+    color:var(--muted); background:var(--paper); padding:0 4px;
+  }
+
+  .step{ display:flex; gap:20px; position:relative; }
+  .step-rail{
+    flex:0 0 40px; display:flex; flex-direction:column; align-items:center;
+  }
+  .step-num{
+    width:36px; height:36px; border-radius:50%;
+    background:var(--ink); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:600;
+    flex:0 0 36px; z-index:1;
+  }
+  .step-line{ width:2px; flex:1; background:var(--line); margin:2px 0; }
+  .step:last-of-type .step-line{ display:none; }
+
+  .card{
+    flex:1;
+    background:var(--paper-card);
+    border-radius:12px;
+    border:1px solid var(--line);
+    box-shadow:var(--shadow);
+    padding:16px 20px 18px;
+    margin-bottom:22px;
+    scroll-margin-top:90px;
+  }
+  .card-tag{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.05em;
+    padding:4px 9px 4px 8px; border-radius:999px; margin-bottom:9px;
+  }
+  .card-tag .dot{ width:6px;height:6px;border-radius:50%; background:currentColor; }
+  .card-title{ font-size:18px; font-weight:600; margin:0 0 7px; line-height:1.25; }
+  .card-body{ font-size:13.2px; line-height:1.55; color:var(--ink-soft); margin:0; }
+  .card-body b{ color:var(--ink); }
+  .card-tools{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  .pill{ font-size:10.5px; font-family:'JetBrains Mono', monospace; background:#f4f2ec; color:var(--ink-soft); padding:3px 7px; border-radius:6px; border:1px solid var(--line); }
+
+  .why{
+    margin-top:12px; padding:9px 12px;
+    background:#fff8dd; border:1px solid #ecdd9c; border-radius:8px;
+    font-size:12px; line-height:1.5; color:#5c4f22;
+  }
+  .why b{ color:#3d3312; }
+
+  .cat-input   .card-tag{ color:var(--cat-input); background:var(--cat-input-bg); }
+  .cat-ai      .card-tag{ color:var(--cat-ai); background:var(--cat-ai-bg); }
+  .cat-design  .card-tag{ color:var(--cat-design); background:var(--cat-design-bg); }
+  .cat-dev     .card-tag{ color:var(--cat-dev); background:var(--cat-dev-bg); }
+  .cat-build   .card-tag{ color:var(--cat-build); background:var(--cat-build-bg); }
+  .cat-infra   .card-tag{ color:var(--cat-infra); background:var(--cat-infra-bg); }
+  .cat-output  .card-tag{ color:var(--cat-output); background:var(--cat-output-bg); }
+
+  .cat-input   .step-num{ background:var(--cat-input); }
+  .cat-ai      .step-num{ background:var(--cat-ai); }
+  .cat-design  .step-num{ background:var(--cat-design); }
+  .cat-dev     .step-num{ background:var(--cat-dev); }
+  .cat-build   .step-num{ background:var(--cat-build); }
+  .cat-infra   .step-num{ background:var(--cat-infra); }
+  .cat-output  .step-num{ background:var(--cat-output); }
+
+  /* loop-back callout */
+  .loop-card{
+    max-width:700px; margin:6px auto 0 60px;
+    background:var(--teal-tint); border:1.5px dashed var(--teal);
+    border-radius:12px; padding:14px 18px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .loop-card .icon{ font-size:20px; flex:0 0 auto; color:var(--teal-ink); }
+  .loop-card .txt{ font-size:12.8px; line-height:1.5; color:var(--teal-ink); }
+  .loop-card a{ color:var(--teal-ink); font-weight:700; text-decoration:underline; }
+
+  footer.board-footer{
+    max-width:700px; margin:36px auto 0;
+    font-size:11.5px; color:var(--muted); line-height:1.6; text-align:center;
+  }
+
+  ::-webkit-scrollbar{ height:10px; width:10px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:#d8d2c2; border-radius:999px; }
+
+  @media (max-width: 780px){
+    .sidebar{ display:none; }
+    .topbar{ padding:16px 20px; }
+    .board{ padding:30px 20px 60px; }
+    .step{ gap:12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="brand-name">Uplift Path</div>
+        <div class="brand-sub">Workflow Hub</div>
+      </div>
+    </div>
+
+    <div class="side-section-label">Whiteboards</div>
+    <div class="side-item active"><span class="dot"></span> Tech Workflow</div>
+    <div class="side-item disabled"><span class="dot"></span> User Lifecycle <span class="badge">planned</span></div>
+    <div class="side-item disabled"><span class="dot"></span> Content &amp; Support <span class="badge">planned</span></div>
+    <div class="side-item disabled"><span class="dot"></span> Growth &amp; Partnerships <span class="badge">planned</span></div>
+
+    <div class="side-section-label">On this board</div>
+    <a class="outline-item" href="#n1"><span class="outline-num">01</span><span class="sw" style="background:var(--cat-input)"></span> Brand brief</a>
+    <a class="outline-item" href="#n2"><span class="outline-num">02</span><span class="sw" style="background:var(--cat-ai)"></span> v0 — AI generation</a>
+    <a class="outline-item" href="#n3"><span class="outline-num">03</span><span class="sw" style="background:var(--cat-design)"></span> Design system agent</a>
+    <a class="outline-item" href="#n4"><span class="outline-num">04</span><span class="sw" style="background:var(--cat-dev)"></span> Export to Claude Code</a>
+    <a class="outline-item" href="#n5"><span class="outline-num">05</span><span class="sw" style="background:var(--cat-dev)"></span> Iterate &amp; QA loop</a>
+    <a class="outline-item" href="#n6"><span class="outline-num">06</span><span class="sw" style="background:var(--cat-build)"></span> Static build</a>
+    <a class="outline-item" href="#n7"><span class="outline-num">07</span><span class="sw" style="background:var(--cat-infra)"></span> Deploy — Cloudflare</a>
+    <a class="outline-item" href="#n8"><span class="outline-num">08</span><span class="sw" style="background:var(--cat-output)"></span> Live site</a>
+
+    <div class="legend-box">
+      <div class="legend-title">Legend</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--cat-input)"></span> Input</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--cat-ai)"></span> AI generation</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--cat-design)"></span> Design system</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--cat-dev)"></span> Development</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--cat-build)"></span> Build</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--cat-infra)"></span> Infra / deploy</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--cat-output)"></span> Output</div>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="crumbs">Workflow Hub / <b>Tech Workflow</b></div>
+        <div class="topbar-title">How we build &amp; ship Uplift Path</div>
+      </div>
+      <div class="tab-strip">
+        <div class="tab active">Timeline</div>
+      </div>
+    </div>
+
+    <div class="board">
+      <div class="intro">
+        <span class="kicker">One straight line, then it loops</span>
+        <p>Every idea moves down this same pipeline, in order. Once the site is live, new changes don't get a separate process — they re-enter at step 05 and flow through the same steps again.</p>
+      </div>
+
+      <div class="timeline">
+
+        <div class="phase-divider"><span class="line"></span><span class="label">Design phase</span><span class="line"></span></div>
+
+        <!-- 01 -->
+        <div class="step">
+          <div class="step-rail"><div class="step-num">01</div><div class="step-line"></div></div>
+          <div id="n1" class="card cat-input">
+            <div class="card-tag"><span class="dot"></span>Input</div>
+            <h3 class="card-title font-display">Brand brief</h3>
+            <p class="card-body">Uplift Path's direction: serves individuals &amp; organizations, the UPLIFT values, the section list for the site, and a hard rule — AA contrast everywhere, no exceptions.</p>
+            <div class="card-tools"><span class="pill">brand guidelines</span><span class="pill">a11y bar: AA</span></div>
+          </div>
+        </div>
+
+        <!-- 02 -->
+        <div class="step">
+          <div class="step-rail"><div class="step-num">02</div><div class="step-line"></div></div>
+          <div id="n2" class="card cat-ai">
+            <div class="card-tag"><span class="dot"></span>AI generation</div>
+            <h3 class="card-title font-display">v0 (Vercel)</h3>
+            <p class="card-body">Prompted v0.dev with the brief. It generated a full Next.js + Tailwind landing page — hero, values grid, dark band, stats, testimonial, CTA — refined over several chat-to-UI passes, then exported as a project.</p>
+            <div class="card-tools"><span class="pill">v0.dev</span><span class="pill">Next.js</span><span class="pill">Tailwind</span></div>
+            <div class="why"><b>Why v0 first?</b> Fastest way to get a real, on-brand UI in front of the team before any hand-written code exists.</div>
+          </div>
+        </div>
+
+        <!-- 03 -->
+        <div class="step">
+          <div class="step-rail"><div class="step-num">03</div><div class="step-line"></div></div>
+          <div id="n3" class="card cat-design">
+            <div class="card-tag"><span class="dot"></span>Design system</div>
+            <h3 class="card-title font-display">Design system agent</h3>
+            <p class="card-body">The v0 export was distilled into a reusable <b>Claude Code skill</b> — tokens, type scale, components, and hard rules (e.g. never white text on brand teal). The validated v0 page ships inside it as a reference starter.</p>
+            <div class="card-tools"><span class="pill">Claude</span><span class="pill">SKILL.md</span><span class="pill">design tokens</span></div>
+            <div class="why"><b>Why a skill, not a style-guide doc?</b> Claude Code reads it on every edit, so tokens and rules stay enforced automatically instead of drifting between sessions.</div>
+          </div>
+        </div>
+
+        <div class="phase-divider"><span class="line"></span><span class="label">Build phase</span><span class="line"></span></div>
+
+        <!-- 04 -->
+        <div class="step">
+          <div class="step-rail"><div class="step-num">04</div><div class="step-line"></div></div>
+          <div id="n4" class="card cat-dev">
+            <div class="card-tag"><span class="dot"></span>Development</div>
+            <h3 class="card-title font-display">Export → Claude Code</h3>
+            <p class="card-body">Skill installed at <code>.claude/skills/uplift-path/</code> inside the real repo. Claude Code becomes the build agent — implementing header, homepage and pages against the skill as the single source of truth.</p>
+            <div class="card-tools"><span class="pill">Claude Code</span><span class="pill">Next.js 16</span><span class="pill">React 19</span><span class="pill">TypeScript</span></div>
+          </div>
+        </div>
+
+        <!-- 05 -->
+        <div class="step">
+          <div class="step-rail"><div class="step-num">05</div><div class="step-line"></div></div>
+          <div id="n5" class="card cat-dev">
+            <div class="card-tag"><span class="dot"></span>Development</div>
+            <h3 class="card-title font-display">Iterate &amp; QA loop</h3>
+            <p class="card-body">The everyday change loop: edit code → run the dev server → check it in a live browser preview → fix bugs and contrast issues → re-verify. Settled decisions get written back into the skill so they aren't relitigated.</p>
+            <div class="card-tools"><span class="pill">next dev</span><span class="pill">browser preview</span><span class="pill">pnpm</span></div>
+          </div>
+        </div>
+
+        <!-- 06 -->
+        <div class="step">
+          <div class="step-rail"><div class="step-num">06</div><div class="step-line"></div></div>
+          <div id="n6" class="card cat-build">
+            <div class="card-tag"><span class="dot"></span>Build</div>
+            <h3 class="card-title font-display">Static build</h3>
+            <p class="card-body"><code>next build</code> exports the whole site as static files into <code>/out</code> — HTML, CSS and JS with no server runtime required to serve a request.</p>
+            <div class="card-tools"><span class="pill">next build</span><span class="pill">static export</span></div>
+          </div>
+        </div>
+
+        <div class="phase-divider"><span class="line"></span><span class="label">Ship</span><span class="line"></span></div>
+
+        <!-- 07 -->
+        <div class="step">
+          <div class="step-rail"><div class="step-num">07</div><div class="step-line"></div></div>
+          <div id="n7" class="card cat-infra">
+            <div class="card-tag"><span class="dot"></span>Infra / deploy</div>
+            <h3 class="card-title font-display">Deploy — Cloudflare</h3>
+            <p class="card-body"><code>wrangler.jsonc</code> configures a static-assets-only Worker that just serves <code>/out</code> — no <code>main</code> script needed. <code>npx wrangler deploy</code> ships it.</p>
+            <div class="card-tools"><span class="pill">Cloudflare Workers</span><span class="pill">Wrangler</span></div>
+            <div class="why"><b>Why static + Workers?</b> No origin server to patch or scale — Cloudflare just serves the pre-built <code>/out</code> folder at the edge.</div>
+          </div>
+        </div>
+
+        <!-- 08 -->
+        <div class="step">
+          <div class="step-rail"><div class="step-num">08</div></div>
+          <div id="n8" class="card cat-output">
+            <div class="card-tag"><span class="dot"></span>Output</div>
+            <h3 class="card-title font-display">Live site</h3>
+            <p class="card-body">Uplift Path running in production on Cloudflare's edge.</p>
+            <div class="card-tools"><span class="pill">production</span></div>
+          </div>
+        </div>
+
+        <div class="loop-card">
+          <div class="icon">↺</div>
+          <div class="txt">Every future change starts here again: it re-enters at <a href="#n5">step 05 — Iterate &amp; QA loop</a>. There's no separate "deploy branch" — the same eight steps run every time.</div>
+        </div>
+
+      </div>
+
+      <footer class="board-footer">
+        This is the first board in the Uplift Path Workflow Hub. Later boards will map the user lifecycle, support and growth workflows on the same canvas.
+      </footer>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
