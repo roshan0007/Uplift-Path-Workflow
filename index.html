@@ -29,6 +29,7 @@
     --cat-build:#c2790f;   --cat-build-bg:#fdf3e4;
     --cat-infra:#e2622f;   --cat-infra-bg:#fdece3;
     --cat-output:#14503f;  --cat-output-bg:#f3fcf9;
+    --cat-git:#24292f;     --cat-git-bg:#eceef0;
     --sidebar-w: 258px;
   }
 
@@ -175,6 +176,7 @@
   .cat-build   .card-tag{ color:var(--cat-build); background:var(--cat-build-bg); }
   .cat-infra   .card-tag{ color:var(--cat-infra); background:var(--cat-infra-bg); }
   .cat-output  .card-tag{ color:var(--cat-output); background:var(--cat-output-bg); }
+  .cat-git     .card-tag{ color:var(--cat-git); background:var(--cat-git-bg); }
 
   .cat-input   .step-num{ background:var(--cat-input); }
   .cat-ai      .step-num{ background:var(--cat-ai); }
@@ -183,6 +185,7 @@
   .cat-build   .step-num{ background:var(--cat-build); }
   .cat-infra   .step-num{ background:var(--cat-infra); }
   .cat-output  .step-num{ background:var(--cat-output); }
+  .cat-git     .step-num{ background:var(--cat-git); }
 
   /* loop-back callout */
   .loop-card{
@@ -232,13 +235,13 @@
     <div class="side-item disabled"><span class="dot"></span> Zoho Backend Lifecycle <span class="badge">planned</span></div>
 
     <div class="side-section-label">On this board</div>
-    <a class="outline-item" href="#n1"><span class="outline-num">01</span><span class="sw" style="background:var(--cat-input)"></span> Brand brief</a>
-    <a class="outline-item" href="#n2"><span class="outline-num">02</span><span class="sw" style="background:var(--cat-ai)"></span> v0 — AI generation</a>
-    <a class="outline-item" href="#n3"><span class="outline-num">03</span><span class="sw" style="background:var(--cat-design)"></span> Design system agent</a>
+    <a class="outline-item" href="#n1"><span class="outline-num">01</span><span class="sw" style="background:var(--cat-input)"></span> Brand guidelines → v0</a>
+    <a class="outline-item" href="#n2"><span class="outline-num">02</span><span class="sw" style="background:var(--cat-ai)"></span> v0 generates the project</a>
+    <a class="outline-item" href="#n3"><span class="outline-num">03</span><span class="sw" style="background:var(--cat-design)"></span> v0 generates the design agent</a>
     <a class="outline-item" href="#n4"><span class="outline-num">04</span><span class="sw" style="background:var(--cat-dev)"></span> Export to Claude Code</a>
     <a class="outline-item" href="#n5"><span class="outline-num">05</span><span class="sw" style="background:var(--cat-dev)"></span> Iterate &amp; QA loop</a>
-    <a class="outline-item" href="#n6"><span class="outline-num">06</span><span class="sw" style="background:var(--cat-build)"></span> Static build</a>
-    <a class="outline-item" href="#n7"><span class="outline-num">07</span><span class="sw" style="background:var(--cat-infra)"></span> Deploy — Cloudflare</a>
+    <a class="outline-item" href="#n6"><span class="outline-num">06</span><span class="sw" style="background:var(--cat-git)"></span> Push to GitHub</a>
+    <a class="outline-item" href="#n7"><span class="outline-num">07</span><span class="sw" style="background:var(--cat-infra)"></span> Auto build &amp; deploy</a>
     <a class="outline-item" href="#n8"><span class="outline-num">08</span><span class="sw" style="background:var(--cat-output)"></span> Live site</a>
 
     <div class="legend-box">
@@ -247,7 +250,7 @@
       <div class="legend-row"><span class="legend-swatch" style="background:var(--cat-ai)"></span> AI generation</div>
       <div class="legend-row"><span class="legend-swatch" style="background:var(--cat-design)"></span> Design system</div>
       <div class="legend-row"><span class="legend-swatch" style="background:var(--cat-dev)"></span> Development</div>
-      <div class="legend-row"><span class="legend-swatch" style="background:var(--cat-build)"></span> Build</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:var(--cat-git)"></span> Version control</div>
       <div class="legend-row"><span class="legend-swatch" style="background:var(--cat-infra)"></span> Infra / deploy</div>
       <div class="legend-row"><span class="legend-swatch" style="background:var(--cat-output)"></span> Output</div>
     </div>
@@ -280,9 +283,9 @@
           <div class="step-rail"><div class="step-num">01</div><div class="step-line"></div></div>
           <div id="n1" class="card cat-input">
             <div class="card-tag"><span class="dot"></span>Input</div>
-            <h3 class="card-title font-display">Brand brief</h3>
-            <p class="card-body">Uplift Path's direction: serves individuals &amp; organizations, the UPLIFT values, the section list for the site, and a hard rule — AA contrast everywhere, no exceptions.</p>
-            <div class="card-tools"><span class="pill">brand guidelines</span><span class="pill">a11y bar: AA</span></div>
+            <h3 class="card-title font-display">Brand guidelines → v0</h3>
+            <p class="card-body">Uplift Path's brand guidelines — colors, type scale, logo rules, tone, the AA-contrast bar — were already built. We uploaded them straight into v0's design system feature, so v0 starts from a structured source of truth instead of a text prompt.</p>
+            <div class="card-tools"><span class="pill">brand guidelines</span><span class="pill">v0 design system</span></div>
           </div>
         </div>
 
@@ -291,8 +294,8 @@
           <div class="step-rail"><div class="step-num">02</div><div class="step-line"></div></div>
           <div id="n2" class="card cat-ai">
             <div class="card-tag"><span class="dot"></span>AI generation</div>
-            <h3 class="card-title font-display">v0 (Vercel)</h3>
-            <p class="card-body">Prompted v0.dev with the brief. It generated a full Next.js + Tailwind landing page — hero, values grid, dark band, stats, testimonial, CTA — refined over several chat-to-UI passes, then exported as a project.</p>
+            <h3 class="card-title font-display">v0 generates the project</h3>
+            <p class="card-body">Using that same uploaded design system, v0 generated a full Next.js + Tailwind project — hero, values grid, dark band, stats, testimonial, CTA — matched to the brand automatically, refined over a few chat-to-UI passes.</p>
             <div class="card-tools"><span class="pill">v0.dev</span><span class="pill">Next.js</span><span class="pill">Tailwind</span></div>
             <div class="why"><b>Why v0 first?</b> Fastest way to get a real, on-brand UI in front of the team before any hand-written code exists.</div>
           </div>
@@ -303,10 +306,9 @@
           <div class="step-rail"><div class="step-num">03</div><div class="step-line"></div></div>
           <div id="n3" class="card cat-design">
             <div class="card-tag"><span class="dot"></span>Design system</div>
-            <h3 class="card-title font-display">Design system agent</h3>
-            <p class="card-body">The v0 export was distilled into a reusable <b>Claude Code skill</b> — tokens, type scale, components, and hard rules (e.g. never white text on brand teal). The validated v0 page ships inside it as a reference starter.</p>
-            <div class="card-tools"><span class="pill">Claude</span><span class="pill">SKILL.md</span><span class="pill">design tokens</span></div>
-            <div class="why"><b>Why a skill, not a style-guide doc?</b> Claude Code reads it on every edit, so tokens and rules stay enforced automatically instead of drifting between sessions.</div>
+            <h3 class="card-title font-display">v0 generates the design agent</h3>
+            <p class="card-body">From the same guidelines, v0 also generated a dedicated design agent for Uplift Path — a packaged reference of tokens, components and hard rules (e.g. never white text on brand teal), instead of just a one-off page.</p>
+            <div class="card-tools"><span class="pill">v0.dev</span><span class="pill">design tokens</span><span class="pill">design agent</span></div>
           </div>
         </div>
 
@@ -318,8 +320,9 @@
           <div id="n4" class="card cat-dev">
             <div class="card-tag"><span class="dot"></span>Development</div>
             <h3 class="card-title font-display">Export → Claude Code</h3>
-            <p class="card-body">Skill installed at <code>.claude/skills/uplift-path/</code> inside the real repo. Claude Code becomes the build agent — implementing header, homepage and pages against the skill as the single source of truth.</p>
+            <p class="card-body">The project and the design agent are exported from v0 and installed as a <b>Claude Code skill</b> at <code>.claude/skills/uplift-path/</code> inside the real repo. Claude Code becomes the build agent — implementing header, homepage and pages against it as the single source of truth.</p>
             <div class="card-tools"><span class="pill">Claude Code</span><span class="pill">Next.js 16</span><span class="pill">React 19</span><span class="pill">TypeScript</span></div>
+            <div class="why"><b>Why hand it to Claude Code?</b> Claude Code reads the design agent on every edit, so tokens and rules stay enforced automatically instead of drifting between sessions.</div>
           </div>
         </div>
 
@@ -334,28 +337,28 @@
           </div>
         </div>
 
+        <div class="phase-divider"><span class="line"></span><span class="label">Ship</span><span class="line"></span></div>
+
         <!-- 06 -->
         <div class="step">
           <div class="step-rail"><div class="step-num">06</div><div class="step-line"></div></div>
-          <div id="n6" class="card cat-build">
-            <div class="card-tag"><span class="dot"></span>Build</div>
-            <h3 class="card-title font-display">Static build</h3>
-            <p class="card-body"><code>next build</code> exports the whole site as static files into <code>/out</code> — HTML, CSS and JS with no server runtime required to serve a request.</p>
-            <div class="card-tools"><span class="pill">next build</span><span class="pill">static export</span></div>
+          <div id="n6" class="card cat-git">
+            <div class="card-tag"><span class="dot"></span>Version control</div>
+            <h3 class="card-title font-display">Push to GitHub</h3>
+            <p class="card-body">Once changes are edited and verified locally, they're committed and pushed to the GitHub repo — the single trigger for everything that happens next.</p>
+            <div class="card-tools"><span class="pill">git push</span><span class="pill">GitHub</span></div>
           </div>
         </div>
-
-        <div class="phase-divider"><span class="line"></span><span class="label">Ship</span><span class="line"></span></div>
 
         <!-- 07 -->
         <div class="step">
           <div class="step-rail"><div class="step-num">07</div><div class="step-line"></div></div>
           <div id="n7" class="card cat-infra">
             <div class="card-tag"><span class="dot"></span>Infra / deploy</div>
-            <h3 class="card-title font-display">Deploy — Cloudflare</h3>
-            <p class="card-body"><code>wrangler.jsonc</code> configures a static-assets-only Worker that just serves <code>/out</code> — no <code>main</code> script needed. <code>npx wrangler deploy</code> ships it.</p>
-            <div class="card-tools"><span class="pill">Cloudflare Workers</span><span class="pill">Wrangler</span></div>
-            <div class="why"><b>Why static + Workers?</b> No origin server to patch or scale — Cloudflare just serves the pre-built <code>/out</code> folder at the edge.</div>
+            <h3 class="card-title font-display">Auto build &amp; deploy</h3>
+            <p class="card-body">Cloudflare Workers Builds watches the repo. Every push to main runs the build command, then <code>npx wrangler deploy</code>, automatically inside Cloudflare's own build environment — no manual deploy step.</p>
+            <div class="card-tools"><span class="pill">Cloudflare Workers Builds</span><span class="pill">Wrangler</span></div>
+            <div class="why"><b>Why auto-deploy on push?</b> Every merge to main goes straight to production — nobody has to remember to run a deploy command by hand.</div>
           </div>
         </div>
 
