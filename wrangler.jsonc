@@ -1,0 +1,10 @@
+{
+  // Static-assets-only Worker: there is no `main` script, Cloudflare just
+  // serves the file(s) in this directory. `npx wrangler deploy` reads this.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "uplift-workflow",
+  "compatibility_date": "2026-08-24",
+  "assets": {
+    "directory": "."
+  }
+}
