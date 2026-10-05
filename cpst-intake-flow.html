@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uplift Path — CPST Intake Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#141414;
+    --dot:#2b2b2b;
+    --text:#eef2f8;
+    --text-soft:#b9c4d6;
+    --muted:#8d99ab;
+    --line:#4a5568;
+    --chrome:#1d1d1f;
+    --chrome-line:#34343a;
+    --focus:#8db4ff;
+
+    /* node kinds: background / border / accent */
+    --form-bg:#15233b;   --form-line:#27406b;   --form-accent:#8db4ff;
+    --sys-bg:#15233b;    --sys-line:#27406b;    --sys-accent:#ffa36b;
+    --entry-bg:#1d2129;  --entry-line:#363d4a;  --entry-accent:#b9c4d6;
+    --email-bg:#2b1730;  --email-line:#5a2f63;  --email-accent:#f29bc8;
+    --note-bg:#33290f;   --note-line:#6a561a;   --note-accent:#ecca5f;
+    --gap-bg:#351618;    --gap-line:#78302f;    --gap-accent:#ff948f;
+    --out-bg:#12301f;    --out-line:#21593c;    --out-accent:#74dfa5;
+
+    --mono:'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{ margin:0; height:100%; background:var(--bg); color:var(--text);
+    font-family:'Lexend Deca', ui-sans-serif, system-ui, -apple-system, sans-serif; overflow:hidden; }
+
+  /* ---------- canvas ---------- */
+  #viewport{
+    position:fixed; inset:0; cursor:grab; touch-action:none;
+    background-image:radial-gradient(circle, var(--dot) 1.3px, transparent 1.3px);
+    background-size:24px 24px;
+  }
+  #viewport.panning{ cursor:grabbing; }
+  #world{ position:absolute; left:0; top:0; transform-origin:0 0; will-change:transform; }
+  #world.anim{ transition:transform .28s ease; }
+  @media (prefers-reduced-motion: reduce){ #world.anim{ transition:none; } }
+
+  #edges{ position:absolute; left:0; top:0; width:1px; height:1px; overflow:visible; pointer-events:none; }
+  .edge{ fill:none; stroke:var(--line); stroke-width:1.6; transition:opacity .15s, stroke .15s; }
+  .edge.dashed{ stroke-dasharray:6 6; }
+  .edge.red{ stroke:#a2403d; }
+  .edge.yellow{ stroke:#8c7326; }
+  .edge.hl{ stroke:var(--focus); stroke-width:2.2; }
+  .dim{ opacity:.22; }
+
+  .elabel{
+    position:absolute; transform:translate(-50%,-50%);
+    font-size:11px; line-height:1.35; color:var(--text-soft); text-align:center;
+    background:var(--bg); border:1px solid var(--chrome-line); border-radius:999px;
+    padding:3px 10px; max-width:170px; width:max-content; transition:opacity .15s;
+  }
+
+  /* section frame, as Heptabase groups a flow */
+  #frame{ position:absolute; border:1.5px solid #3b3b42; border-radius:14px; background:rgba(255,255,255,.012); pointer-events:none; }
+  #frame-chip{
+    position:absolute; left:-1px; top:-34px; background:#6e6e76; color:#fff;
+    font-weight:600; font-size:15px; padding:5px 14px; border-radius:8px; white-space:nowrap;
+  }
+
+  /* ---------- nodes ---------- */
+  .node{
+    position:absolute; border-radius:10px; padding:14px 16px 16px;
+    background:var(--n-bg); border:1px solid var(--n-line); user-select:none; -webkit-user-select:none;
+    transition:opacity .15s, box-shadow .15s;
+  }
+  .node.unverified{ border-style:dashed; }
+  .node.hl{ box-shadow:0 0 0 2px var(--focus); }
+  .k-form {--n-bg:var(--form-bg); --n-line:var(--form-line); --n-accent:var(--form-accent);}
+  .k-sys  {--n-bg:var(--sys-bg);  --n-line:var(--sys-line);  --n-accent:var(--sys-accent);}
+  .k-entry{--n-bg:var(--entry-bg);--n-line:var(--entry-line);--n-accent:var(--entry-accent);}
+  .k-email{--n-bg:var(--email-bg);--n-line:var(--email-line);--n-accent:var(--email-accent);}
+  .k-note {--n-bg:var(--note-bg); --n-line:var(--note-line); --n-accent:var(--note-accent);}
+  .k-gap  {--n-bg:var(--gap-bg);  --n-line:var(--gap-line);  --n-accent:var(--gap-accent);}
+  .k-out  {--n-bg:var(--out-bg);  --n-line:var(--out-line);  --n-accent:var(--out-accent);}
+
+  .tagrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .tag{ font-family:var(--mono); font-size:10.5px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--n-accent); }
+  .chip{ font-family:var(--mono); font-size:10px; letter-spacing:.04em; color:var(--note-accent); border:1px solid var(--note-line); border-radius:999px; padding:1px 7px; }
+  .title{ margin:7px 0 6px; font-size:17px; font-weight:600; line-height:1.3; }
+  .body{ margin:0; font-size:13px; line-height:1.6; color:var(--text-soft); }
+  .body code, .meta code{ font-family:var(--mono); font-size:11.5px; background:rgba(255,255,255,.08); border-radius:4px; padding:1px 5px; color:var(--text); }
+  .meta{ margin-top:11px; padding-top:10px; border-top:1px solid rgba(255,255,255,.1); display:grid; gap:6px; }
+  .mrow{ display:grid; grid-template-columns:70px 1fr; gap:8px; font-size:12px; line-height:1.5; color:var(--text-soft); }
+  .mk{ font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); padding-top:2px; }
+
+  /* ---------- chrome ---------- */
+  .chrome{ position:fixed; background:var(--chrome); border:1px solid var(--chrome-line); border-radius:10px; z-index:10; }
+  #crumbs{ left:16px; top:14px; padding:9px 14px; font-size:13px; color:var(--muted); display:flex; gap:8px; align-items:center; }
+  #crumbs a{ color:var(--text-soft); text-decoration:none; }
+  #crumbs a:hover{ color:var(--text); text-decoration:underline; }
+  #crumbs b{ color:var(--text); font-weight:600; }
+  #tools{ left:16px; top:70px; padding:6px; display:flex; flex-direction:column; gap:4px; }
+  #tools button{
+    width:36px; height:36px; border:0; border-radius:8px; background:transparent; color:var(--text-soft);
+    font:500 18px var(--mono); cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  #tools button:hover{ background:#2a2a2e; color:var(--text); }
+  #tools button:focus-visible, #crumbs a:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  #zoomread{ text-align:center; font:500 10.5px var(--mono); color:var(--muted); padding:2px 0 4px; }
+  #legend{ right:16px; bottom:16px; padding:12px 14px; font-size:12px; color:var(--text-soft); display:grid; gap:7px; }
+  #legend .lrow{ display:flex; align-items:center; gap:9px; }
+  .sw{ width:12px; height:12px; border-radius:3px; border:1px solid; flex:0 0 12px; }
+  #hint{ left:50%; bottom:16px; transform:translateX(-50%); padding:8px 14px; font-size:12px; color:var(--muted); white-space:nowrap; }
+  @media (max-width:760px){
+    #hint{ display:none; }
+    #legend{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="crumbs" class="chrome"><a href="index.html">Workflow Hub</a><span>/</span><b>CPST Intake Flow</b><span>·</span><span>as-is</span></div>
+
+<div id="tools" class="chrome" role="toolbar" aria-label="Canvas controls">
+  <button id="zin" type="button" aria-label="Zoom in" title="Zoom in (+)">+</button>
+  <button id="zout" type="button" aria-label="Zoom out" title="Zoom out (-)">&minus;</button>
+  <button id="zfit" type="button" aria-label="Fit whole flow" title="Fit whole flow (0)">&#9635;</button>
+  <div id="zoomread" aria-live="off">100%</div>
+</div>
+
+<div id="legend" class="chrome" aria-label="Legend">
+  <div class="lrow"><span class="sw" style="background:var(--form-bg);border-color:var(--form-line)"></span>Zoho form step</div>
+  <div class="lrow"><span class="sw" style="background:var(--sys-bg);border-color:var(--sys-line)"></span>Worker / Zoho API</div>
+  <div class="lrow"><span class="sw" style="background:var(--email-bg);border-color:var(--email-line)"></span>Email</div>
+  <div class="lrow"><span class="sw" style="background:var(--note-bg);border-color:var(--note-line)"></span>Note</div>
+  <div class="lrow"><span class="sw" style="background:var(--gap-bg);border-color:var(--gap-line)"></span>Gap / failure path</div>
+  <div class="lrow"><span class="sw" style="background:transparent;border:1px dashed var(--note-accent)"></span>Unverified</div>
+</div>
+
+<div id="hint" class="chrome">Drag to pan · Ctrl or ⌘ + scroll to zoom · click a card to trace its arrows</div>
+
+<div id="viewport">
+  <div id="world">
+    <div id="frame"><div id="frame-chip">UP CPST Flow · as-is</div></div>
+    <svg id="edges" aria-hidden="true">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4a5568"/></marker>
+        <marker id="ah-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#a2403d"/></marker>
+        <marker id="ah-hl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8db4ff"/></marker>
+      </defs>
+    </svg>
+  </div>
+</div>
+
+<script>
+/*
+ * The as-is individual intake flow, drawn as a Heptabase-style canvas.
+ * Source of truth for every card is the Uplift-path repo (live site) plus the
+ * Heptabase screenshots; anything that could not be confirmed in code carries
+ * `unverified: true` and renders with a dashed border.
+ *
+ * Edit NODES / EDGES only. Coordinates are canvas pixels; `s` is the side an
+ * arrow leaves or enters (l r t b).
+ */
+const NODES = [
+  { id:'entry', kind:'entry', x:0, y:300, w:230, tag:'Entry',
+    title:'Visitor on the site',
+    body:'Clicks a <b>Get Started</b> button on <code>/peer-coaching</code>, or the sticky intake bar on the homepage.' },
+
+  { id:'app', kind:'form', x:400, y:300, w:310, tag:'Step 1 · Zoho form',
+    title:'Application',
+    body:'Full-screen modal over the page, so the address bar does not change. Titled <b>Find the Right Peer Coach for You</b>.',
+    meta:[['Form','<code>UPPersonalDataSubmit</code>'],
+          ['Case ID','Created here by Zoho: <code>${zf:UniqueId}</code>'],
+          ['Next','Redirect to <code>/cmps?caseid=…</code>']] },
+
+  { id:'elig', kind:'form', x:880, y:300, w:310, tag:'Step 2 · Zoho form',
+    title:'Eligibility',
+    body:'Ohio adult, 18 and over, with active Ohio Medicaid. Tells the person plainly where they stand. Route <code>/cmps</code>.',
+    meta:[['Form','<code>CMPS</code>'],
+          ['Case ID','Hidden field <code>SingleLine</code>, prefilled from the URL'],
+          ['Next','Redirect to <code>/booking</code>, set inside Zoho']] },
+
+  { id:'sched', kind:'sys', x:1360, y:300, w:310, tag:'Step 3 · Scheduler',
+    title:'Scheduling',
+    body:'The only step that is not a form. Pick a day and time for a phone or video session. Times are Eastern. Route <code>/booking</code>.',
+    meta:[['Book','<code>bookSlot</code> with case ID, time and staff ID'],
+          ['Next','Page itself moves on to <code>/consent-form?caseid=…</code>']] },
+
+  { id:'consent', kind:'form', x:1840, y:300, w:310, tag:'Step 4 · Zoho form',
+    title:'Consent',
+    body:'Review and sign what stays private, what is shared and with whom, and what to expect from the Peer Coach. About 5,800px tall, so it fills the screen. Route <code>/consent-form</code>.',
+    meta:[['Form','<code>ConsentFormclient</code>'],
+          ['Case ID','<code>SingleLine10</code> and <code>SingleLine11</code>'],
+          ['Next','Nothing. Zoho confirmation ends the flow']] },
+
+  { id:'end', kind:'out', x:2320, y:300, w:290, tag:'Outcome',
+    title:'End of flow',
+    body:'Booked session, meeting link on the CRM record, signed consent. The person sees Zoho&rsquo;s confirmation message inside the frame.' },
+
+  /* above the row */
+  { id:'crm', kind:'email', x:60, y:20, w:250, tag:'CRM', unverified:true,
+    title:'Contacts record',
+    body:'Lead stored in the Zoho CRM Contacts module.' },
+  { id:'admin', kind:'email', x:350, y:20, w:250, tag:'Email · Jotform', unverified:true,
+    title:'Admin notification',
+    body:'To the Uplift Path team: a new client submitted Step 1. Review it and make contact.' },
+  { id:'welcome', kind:'email', x:640, y:20, w:260, tag:'Email · Zoho CRM', unverified:true,
+    title:'Welcome email',
+    body:'To the applicant. Lists the four steps, asks for an insurance card photo, links the Privacy Notice, Client Rights and Informed Consent.' },
+
+  { id:'caseid', kind:'note', x:1000, y:60, w:300, tag:'Note',
+    title:'The case ID is the thread',
+    body:'Zoho creates it at step 1. After that it exists only in the URL as <code>?caseid=</code>. Lose it and the next form&rsquo;s hidden field is empty.' },
+
+  { id:'worker', kind:'sys', x:1380, y:-10, w:300, tag:'Cloudflare Worker',
+    title:'uplift-api',
+    body:'Holds the Zoho OAuth secrets. Fronts Zoho Bookings and CRM.',
+    meta:[['getSlots','Open times, asking each staff member'],
+          ['bookSlot','Finds the case in CRM Intake Submissions by Name, books it, writes the meeting link to the record and the Contact']] },
+
+  { id:'baa', kind:'gap', x:1780, y:60, w:280, tag:'Gap',
+    title:'Worker is in a personal account',
+    body:'Runs in an individual Cloudflare account, not the organisation&rsquo;s. Whether a BAA covers it is for the HIPAA Security Officer.' },
+
+  { id:'thanks', kind:'gap', x:2320, y:60, w:290, tag:'Gap',
+    title:'Thank-you page not used',
+    body:'<code>/thank-you</code> exists but nothing in this flow redirects to it. Consent has no redirect.' },
+
+  /* below the row: failure and drop-off paths */
+  { id:'abandon', kind:'gap', x:400, y:720, w:310, tag:'Gap · drop-off',
+    title:'Stops after step 1',
+    body:'Nothing follows up. An email about 15 minutes after an incomplete submission, via a CRM Cadence, was discussed and is not built.' },
+
+  { id:'inelig', kind:'gap', x:880, y:720, w:310, tag:'Gap · failure', unverified:true,
+    title:'Not eligible',
+    body:'Not in Ohio, under 18, or no active Medicaid. No outcome is designed in the repo. The Zoho form may handle it.' },
+
+  { id:'noslot', kind:'gap', x:1280, y:720, w:270, tag:'Gap · failure',
+    title:'Booking fails or nothing open',
+    body:'The page shows an error. There is no designed route, such as a waitlist or a call-back.' },
+
+  { id:'nocase', kind:'gap', x:1590, y:720, w:270, tag:'Gap · failure',
+    title:'Case not found',
+    body:'No case ID in the URL, or the CRM cannot find it. The page tells the person to start again from step 1.' },
+
+  { id:'twofields', kind:'note', x:1960, y:720, w:290, tag:'Note',
+    title:'Two case ID fields',
+    body:'<code>SingleLine11</code> is a lookup into another form and did not take the prefill when tested.' },
+];
+
+const EDGES = [
+  { from:'entry',  fs:'r', to:'app',     ts:'l', label:'opens modal' },
+  { from:'app',    fs:'r', to:'elig',    ts:'l', label:'redirect · ?caseid=' },
+  { from:'elig',   fs:'r', to:'sched',   ts:'l', label:'redirect · set in Zoho', dashed:true },
+  { from:'sched',  fs:'r', to:'consent', ts:'l', label:'page redirect · ?caseid=' },
+  { from:'consent',fs:'r', to:'end',     ts:'l', label:'confirmation' },
+
+  { from:'app', fs:'t', to:'crm',     ts:'b', label:'submit', dashed:true },
+  { from:'app', fs:'t', to:'admin',   ts:'b', label:'submit', dashed:true },
+  { from:'app', fs:'t', to:'welcome', ts:'b', label:'submit', dashed:true },
+
+  { from:'sched',  fs:'t', to:'worker', ts:'b', label:'getSlots · bookSlot', both:true },
+  { from:'worker', fs:'r', to:'baa',    ts:'l', label:'open question', dashed:true, color:'red', noarrow:true },
+  { from:'end',    fs:'t', to:'thanks', ts:'b', label:'not linked', dashed:true, color:'red' },
+  { from:'elig',   fs:'t', to:'caseid', ts:'b', dashed:true, color:'yellow', noarrow:true },
+
+  { from:'app',    fs:'b', to:'abandon', ts:'t', label:'never continues', dashed:true, color:'red' },
+  { from:'elig',   fs:'b', to:'inelig',  ts:'t', label:'fails the basics', dashed:true, color:'red' },
+  { from:'sched',  fs:'b', to:'noslot',  ts:'t', label:'booking fails', dashed:true, color:'red' },
+  { from:'sched',  fs:'b', to:'nocase',  ts:'t', label:'no case ID', dashed:true, color:'red' },
+  { from:'consent',fs:'b', to:'twofields',ts:'t', dashed:true, color:'yellow', noarrow:true },
+];
+
+/* ---------------- build ---------------- */
+const $ = (s) => document.querySelector(s);
+const viewport = $('#viewport'), world = $('#world'), svg = $('#edges'), frame = $('#frame');
+const NS = 'http://www.w3.org/2000/svg';
+const els = {};
+
+for (const n of NODES) {
+  const d = document.createElement('article');
+  d.className = `node k-${n.kind}${n.unverified ? ' unverified' : ''}`;
+  d.dataset.id = n.id;
+  d.style.left = n.x + 'px'; d.style.top = n.y + 'px'; d.style.width = n.w + 'px';
+  d.innerHTML =
+    `<div class="tagrow"><span class="tag">${n.tag}</span>${n.unverified ? '<span class="chip">UNVERIFIED</span>' : ''}</div>` +
+    `<h2 class="title">${n.title}</h2><p class="body">${n.body}</p>` +
+    (n.meta ? `<div class="meta">${n.meta.map(([k, v]) => `<div class="mrow"><span class="mk">${k}</span><span>${v}</span></div>`).join('')}</div>` : '');
+  world.appendChild(d);
+  els[n.id] = d;
+}
+
+const rect = (id) => { const e = els[id]; return { x:e.offsetLeft, y:e.offsetTop, w:e.offsetWidth, h:e.offsetHeight }; };
+const DIR = { l:[-1,0], r:[1,0], t:[0,-1], b:[0,1] };
+function point(id, side) {
+  const r = rect(id);
+  return side === 'l' ? [r.x, r.y + r.h/2] : side === 'r' ? [r.x + r.w, r.y + r.h/2]
+       : side === 't' ? [r.x + r.w/2, r.y] : [r.x + r.w/2, r.y + r.h];
+}
+
+const edgeEls = [];
+function drawEdges() {
+  edgeEls.forEach(({ path, label }) => { path.remove(); label?.remove(); });
+  edgeEls.length = 0;
+  for (const e of EDGES) {
+    const [x1, y1] = point(e.from, e.fs), [x2, y2] = point(e.to, e.ts);
+    const d = Math.max(60, Math.hypot(x2 - x1, y2 - y1) * 0.35);
+    const a = DIR[e.fs], b = DIR[e.ts];
+    const path = document.createElementNS(NS, 'path');
+    path.setAttribute('d', `M${x1} ${y1} C${x1 + a[0]*d} ${y1 + a[1]*d} ${x2 + b[0]*d} ${y2 + b[1]*d} ${x2} ${y2}`);
+    path.setAttribute('class', `edge${e.dashed ? ' dashed' : ''}${e.color ? ' ' + e.color : ''}`);
+    const mk = e.color === 'red' ? 'ah-red' : 'ah';
+    if (!e.noarrow) path.setAttribute('marker-end', `url(#${mk})`);
+    if (e.both) path.setAttribute('marker-start', `url(#${mk})`);
+    svg.appendChild(path);
+    let label = null;
+    if (e.label) {
+      const m = path.getPointAtLength(path.getTotalLength() / 2);
+      label = document.createElement('div');
+      label.className = 'elabel'; label.textContent = e.label;
+      label.style.left = m.x + 'px'; label.style.top = m.y + 'px';
+      world.appendChild(label);
+    }
+    edgeEls.push({ path, label, e, hlMarker: e.noarrow ? null : mk });
+  }
+}
+
+let bounds = { x:0, y:0, w:1, h:1 };
+function layoutFrame() {
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const n of NODES) { const r = rect(n.id); x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h); }
+  const pad = 70;
+  bounds = { x:x0 - pad, y:y0 - pad, w:x1 - x0 + pad*2, h:y1 - y0 + pad*2 };
+  Object.assign(frame.style, { left:bounds.x + 'px', top:bounds.y + 'px', width:bounds.w + 'px', height:bounds.h + 'px' });
+}
+
+/* ---------------- pan / zoom ---------------- */
+let view = { x:0, y:0, k:1 };
+const K_MIN = 0.2, K_MAX = 2.5;
+function apply(animate) {
+  world.classList.toggle('anim', !!animate);
+  world.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.k})`;
+  $('#zoomread').textContent = Math.round(view.k * 100) + '%';
+}
+function zoomAt(cx, cy, factor, animate) {
+  const k = Math.min(K_MAX, Math.max(K_MIN, view.k * factor));
+  const f = k / view.k;
+  view.x = cx - (cx - view.x) * f; view.y = cy - (cy - view.y) * f; view.k = k;
+  apply(animate);
+}
+function fit(animate) {
+  const vw = innerWidth, vh = innerHeight;
+  const padL = 80, padR = 24, padT = 90, padB = 24;
+  const k = Math.min((vw - padL - padR) / bounds.w, (vh - padT - padB) / bounds.h, 1);
+  view.k = k;
+  view.x = padL + ((vw - padL - padR) - bounds.w * k) / 2 - bounds.x * k;
+  view.y = padT + ((vh - padT - padB) - bounds.h * k) / 2 - bounds.y * k;
+  apply(animate);
+}
+
+viewport.addEventListener('wheel', (ev) => {
+  ev.preventDefault();
+  if (ev.ctrlKey || ev.metaKey) zoomAt(ev.clientX, ev.clientY, Math.exp(-ev.deltaY * 0.01), false);
+  else { view.x -= ev.deltaX; view.y -= ev.deltaY; apply(false); }
+}, { passive:false });
+
+let drag = null, moved = false;
+viewport.addEventListener('pointerdown', (ev) => {
+  // The card is read here, not on pointerup: pointer capture retargets every
+  // later event to the viewport, so `ev.target` is no longer the card by then.
+  drag = { x:ev.clientX, y:ev.clientY, vx:view.x, vy:view.y, node:ev.target.closest('.node')?.dataset.id ?? null };
+  moved = false;
+  viewport.setPointerCapture(ev.pointerId);
+});
+viewport.addEventListener('pointermove', (ev) => {
+  if (!drag) return;
+  const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
+  if (!moved && Math.hypot(dx, dy) > 4) { moved = true; viewport.classList.add('panning'); }
+  if (moved) { view.x = drag.vx + dx; view.y = drag.vy + dy; apply(false); }
+});
+const endDrag = () => { drag = null; viewport.classList.remove('panning'); };
+viewport.addEventListener('pointerup', (ev) => {
+  const wasClick = !moved, node = drag?.node ?? null;
+  endDrag();
+  if (wasClick) select(node);
+});
+viewport.addEventListener('pointercancel', endDrag);
+
+$('#zin').onclick  = () => zoomAt(innerWidth/2, innerHeight/2, 1.25, true);
+$('#zout').onclick = () => zoomAt(innerWidth/2, innerHeight/2, 0.8, true);
+$('#zfit').onclick = () => fit(true);
+addEventListener('keydown', (ev) => {
+  if (ev.key === '+' || ev.key === '=') $('#zin').click();
+  else if (ev.key === '-') $('#zout').click();
+  else if (ev.key === '0') $('#zfit').click();
+  else if (ev.key === 'Escape') select(null);
+});
+
+/* ---------------- selection: trace a card's arrows ---------------- */
+function select(id) {
+  const linked = new Set(id ? [id] : []);
+  edgeEls.forEach(({ e }) => { if (id && (e.from === id || e.to === id)) { linked.add(e.from); linked.add(e.to); } });
+  for (const n of NODES) {
+    els[n.id].classList.toggle('hl', n.id === id);
+    els[n.id].classList.toggle('dim', !!id && !linked.has(n.id));
+  }
+  edgeEls.forEach(({ path, label, e, hlMarker }) => {
+    const on = !!id && (e.from === id || e.to === id);
+    path.classList.toggle('hl', on);
+    path.classList.toggle('dim', !!id && !on);
+    label?.classList.toggle('dim', !!id && !on);
+    if (hlMarker) {
+      path.setAttribute('marker-end', `url(#${on ? 'ah-hl' : hlMarker})`);
+      if (e.both) path.setAttribute('marker-start', `url(#${on ? 'ah-hl' : hlMarker})`);
+    }
+  });
+}
+
+/* ---------------- start ---------------- */
+function init() { layoutFrame(); drawEdges(); fit(false); }
+(document.fonts?.ready ?? Promise.resolve()).then(init);
+init();
+addEventListener('resize', () => fit(false));
+</script>
+</body>
+</html>
