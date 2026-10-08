@@ -66,7 +66,7 @@
   .brand-name{ font-size:13.5px; font-weight:600; line-height:1.2; }
   .brand-sub{ font-size:11px; color:var(--muted); }
   .side-section-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); padding:14px 10px 6px; font-weight:600; }
-  .side-item{ display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:8px; font-size:13px; color:var(--ink-soft); cursor:pointer; margin-bottom:2px; }
+  .side-item{ display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:8px; font-size:13px; color:var(--ink-soft); cursor:pointer; margin-bottom:2px; text-decoration:none; }
   .side-item:hover{ background:rgba(0,0,0,.035); }
   .side-item.active{ background:var(--sidebar-active); color:var(--ink); font-weight:600; box-shadow:var(--shadow); }
   .side-item .dot{ width:6px;height:6px;border-radius:50%; background:currentColor; flex:0 0 6px; }
@@ -230,8 +230,8 @@
     </div>
 
     <div class="side-section-label">Whiteboards</div>
-    <div class="side-item active"><span class="dot"></span> Tech Workflow</div>
-    <div class="side-item disabled"><span class="dot"></span> User Lifecycle <span class="badge">planned</span></div>
+    <a class="side-item active" href="index.html"><span class="dot"></span> Tech Workflow</a>
+    <a class="side-item" href="client-workflow.html"><span class="dot"></span> Client Workflow</a>
     <div class="side-item disabled"><span class="dot"></span> Zoho Backend Lifecycle <span class="badge">planned</span></div>
 
     <div class="side-section-label">On this board</div>

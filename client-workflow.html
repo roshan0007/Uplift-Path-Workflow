@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uplift Path — Client Workflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#141414;
+    --dot:#2b2b2b;
+    --text:#eef2f8;
+    --text-soft:#b9c4d6;
+    --muted:#8d99ab;
+    --line:#4a5568;
+    --chrome:#1d1d1f;
+    --chrome-line:#34343a;
+    --focus:#8db4ff;
+
+    /* node kinds: background / border / accent */
+    --entry-bg:#1d2129;  --entry-line:#363d4a;  --entry-accent:#b9c4d6;
+    --site-bg:#12301f;   --site-line:#21593c;   --site-accent:#74dfa5;
+    --form-bg:#15233b;   --form-line:#27406b;   --form-accent:#8db4ff;
+    --crm-bg:#15233b;    --crm-line:#27406b;    --crm-accent:#ffa36b;
+    --msg-bg:#2b1730;    --msg-line:#5a2f63;    --msg-accent:#f29bc8;
+    --wait-bg:#33290f;   --wait-line:#6a561a;   --wait-accent:#ecca5f;
+    --drop-bg:#351618;   --drop-line:#78302f;   --drop-accent:#ff948f;
+    --next-bg:#12301f;   --next-line:#21593c;   --next-accent:#74dfa5;
+
+    --mono:'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{ margin:0; height:100%; background:var(--bg); color:var(--text);
+    font-family:'Lexend Deca', ui-sans-serif, system-ui, -apple-system, sans-serif; overflow:hidden; }
+
+  /* ---------- canvas ---------- */
+  #viewport{
+    position:fixed; inset:0; cursor:grab; touch-action:none;
+    background-image:radial-gradient(circle, var(--dot) 1.3px, transparent 1.3px);
+    background-size:24px 24px;
+  }
+  #viewport.panning{ cursor:grabbing; }
+  #world{ position:absolute; left:0; top:0; transform-origin:0 0; will-change:transform; }
+  #world.anim{ transition:transform .28s ease; }
+  @media (prefers-reduced-motion: reduce){ #world.anim{ transition:none; } }
+
+  #edges{ position:absolute; left:0; top:0; width:1px; height:1px; overflow:visible; pointer-events:none; }
+  .edge{ fill:none; stroke:var(--line); stroke-width:1.6; transition:opacity .15s, stroke .15s; }
+  .edge.dashed{ stroke-dasharray:6 6; }
+  .edge.red{ stroke:#a2403d; }
+  .edge.hl{ stroke:var(--focus); stroke-width:2.2; }
+  .dim{ opacity:.22; }
+
+  .elabel{
+    position:absolute; transform:translate(-50%,-50%);
+    font-size:11px; line-height:1.35; color:var(--text-soft); text-align:center;
+    background:var(--bg); border:1px solid var(--chrome-line); border-radius:999px;
+    padding:3px 10px; max-width:170px; width:max-content; transition:opacity .15s;
+  }
+
+  /* section frame, as Heptabase groups a flow */
+  #frame{ position:absolute; border:1.5px solid #3b3b42; border-radius:14px; background:rgba(255,255,255,.012); pointer-events:none; }
+  #frame-chip{
+    position:absolute; left:-1px; top:-34px; background:#6e6e76; color:#fff;
+    font-weight:600; font-size:15px; padding:5px 14px; border-radius:8px; white-space:nowrap;
+  }
+
+  /* ---------- nodes ---------- */
+  .node{
+    position:absolute; border-radius:10px; padding:14px 16px 16px;
+    background:var(--n-bg); border:1px solid var(--n-line); user-select:none; -webkit-user-select:none;
+    transition:opacity .15s, box-shadow .15s;
+  }
+  .node.pending{ border-style:dashed; }
+  .node.hl{ box-shadow:0 0 0 2px var(--focus); }
+  .k-entry{--n-bg:var(--entry-bg);--n-line:var(--entry-line);--n-accent:var(--entry-accent);}
+  .k-site {--n-bg:var(--site-bg); --n-line:var(--site-line); --n-accent:var(--site-accent);}
+  .k-form {--n-bg:var(--form-bg); --n-line:var(--form-line); --n-accent:var(--form-accent);}
+  .k-crm  {--n-bg:var(--crm-bg);  --n-line:var(--crm-line);  --n-accent:var(--crm-accent);}
+  .k-msg  {--n-bg:var(--msg-bg);  --n-line:var(--msg-line);  --n-accent:var(--msg-accent);}
+  .k-wait {--n-bg:var(--wait-bg); --n-line:var(--wait-line); --n-accent:var(--wait-accent);}
+  .k-drop {--n-bg:var(--drop-bg); --n-line:var(--drop-line); --n-accent:var(--drop-accent);}
+  .k-next {--n-bg:var(--next-bg); --n-line:var(--next-line); --n-accent:var(--next-accent);}
+
+  .tagrow{ display:flex; align-items:center; gap:8px; }
+  .tag{ font-family:var(--mono); font-size:10.5px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--n-accent); }
+  .tog{
+    margin-left:auto; width:24px; height:24px; flex:0 0 24px; border:0; border-radius:6px;
+    background:transparent; color:var(--muted); cursor:pointer; padding:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .tog:hover{ background:rgba(255,255,255,.08); color:var(--text); }
+  .tog:focus-visible{ outline:2px solid var(--focus); outline-offset:1px; }
+  .tog svg{ width:14px; height:14px; transition:transform .15s; }
+  .node.collapsed .tog svg{ transform:rotate(-90deg); }
+  .node.collapsed .content{ display:none; }
+  .node.collapsed .title{ margin-bottom:0; }
+
+  .title{ margin:7px 0 6px; font-size:17px; font-weight:600; line-height:1.3; }
+  .body{ margin:0; font-size:13px; line-height:1.6; color:var(--text-soft); }
+  .body + .body{ margin-top:8px; }
+  .body b{ color:var(--text); font-weight:600; }
+  .body a{ color:var(--focus); }
+  .body code, .meta code{ font-family:var(--mono); font-size:11.5px; background:rgba(255,255,255,.08); border-radius:4px; padding:1px 5px; color:var(--text); }
+  .meta{ margin-top:11px; padding-top:10px; border-top:1px solid rgba(255,255,255,.1); display:grid; gap:6px; }
+  .mrow{ display:grid; grid-template-columns:70px 1fr; gap:8px; font-size:12px; line-height:1.5; color:var(--text-soft); }
+  .mk{ font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); padding-top:2px; }
+
+  .shot{ margin:12px 0 0; }
+  .shot img{ display:block; width:100%; height:auto; border-radius:8px; border:1px solid rgba(255,255,255,.12); pointer-events:none; }
+  .shot figcaption{ font-size:11px; color:var(--muted); margin-top:6px; }
+  .slot{ margin-top:10px; border:1px dashed rgba(255,255,255,.22); border-radius:8px; padding:14px; text-align:center; font-size:11.5px; color:var(--muted); }
+
+  /* a Google result, drawn in Google's own light style */
+  .serp{ margin-top:12px; padding:12px 14px; border-radius:8px; background:#fff; font-family:Arial, Helvetica, sans-serif; }
+  .serp-site{ display:flex; align-items:center; gap:10px; }
+  .serp-fav{ width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg, #08d1a7, #019ed0); flex:0 0 26px; }
+  .serp-name{ font-size:14px; color:#202124; line-height:1.2; }
+  .serp-url{ font-size:12px; color:#4d5156; }
+  .serp-title{ display:block; font-size:18px; color:#1a0dab; margin:6px 0 3px; line-height:1.3; text-decoration:none; }
+  .serp-title:hover{ text-decoration:underline; }
+  .serp-desc{ font-size:13px; color:#4d5156; line-height:1.5; }
+
+
+  .timer{ display:flex; gap:8px; margin-top:12px; }
+  .tbox{ flex:1; text-align:center; padding:8px 6px; border-radius:8px; border:1px solid var(--wait-line); background:rgba(0,0,0,.18); }
+  .tbox .v{ font-family:var(--mono); font-size:17px; font-weight:500; color:var(--wait-accent); }
+  .tbox .l{ font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-top:2px; }
+
+  /* ---------- chrome ---------- */
+  .chrome{ position:fixed; background:var(--chrome); border:1px solid var(--chrome-line); border-radius:10px; z-index:10; }
+  #crumbs{ left:16px; top:14px; padding:9px 14px; font-size:13px; color:var(--muted); display:flex; gap:8px; align-items:center; }
+  #crumbs a{ color:var(--text-soft); text-decoration:none; }
+  #crumbs a:hover{ color:var(--text); text-decoration:underline; }
+  #crumbs b{ color:var(--text); font-weight:600; }
+  #tools{ left:16px; top:70px; padding:6px; display:flex; flex-direction:column; gap:4px; }
+  #tools button{
+    width:36px; height:36px; border:0; border-radius:8px; background:transparent; color:var(--text-soft);
+    font:500 18px var(--mono); cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  #tools button svg{ width:16px; height:16px; }
+  #tools button:hover{ background:#2a2a2e; color:var(--text); }
+  #tools button:focus-visible, #crumbs a:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  #tools .sep{ height:1px; background:var(--chrome-line); margin:2px 4px; }
+  #zoomread{ text-align:center; font:500 10.5px var(--mono); color:var(--muted); padding:2px 0 4px; }
+  #legend{ right:16px; bottom:16px; padding:12px 14px; font-size:12px; color:var(--text-soft); display:grid; gap:7px; }
+  #legend .lrow{ display:flex; align-items:center; gap:9px; }
+  .sw{ width:12px; height:12px; border-radius:3px; border:1px solid; flex:0 0 12px; }
+  #hint{ left:50%; bottom:16px; transform:translateX(-50%); padding:8px 14px; font-size:12px; color:var(--muted); white-space:nowrap; }
+  @media (max-width:760px){
+    #hint{ display:none; }
+    #legend{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="chev" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-open" viewBox="0 0 16 16"><path d="M3 6l5 5 5-5M3 2.5h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-close" viewBox="0 0 16 16"><path d="M3 10l5-5 5 5M3 13.5h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<div id="crumbs" class="chrome"><a href="index.html">Workflow Hub</a><span>/</span><b>Client Workflow</b><span>·</span><span>Peer Coaching sign-up</span></div>
+
+<div id="tools" class="chrome" role="toolbar" aria-label="Canvas controls">
+  <button id="zin" type="button" aria-label="Zoom in" title="Zoom in (+)">+</button>
+  <button id="zout" type="button" aria-label="Zoom out" title="Zoom out (-)">&minus;</button>
+  <button id="zfit" type="button" aria-label="Fit whole flow" title="Fit whole flow (0)">&#9635;</button>
+  <div id="zoomread" aria-live="off">100%</div>
+  <div class="sep"></div>
+  <button id="openall" type="button" aria-label="Expand all cards" title="Expand all cards (E)"><svg><use href="#i-open"/></svg></button>
+  <button id="closeall" type="button" aria-label="Collapse all cards" title="Collapse all cards (C)"><svg><use href="#i-close"/></svg></button>
+</div>
+
+<div id="legend" class="chrome" aria-label="Legend">
+  <div class="lrow"><span class="sw" style="background:var(--entry-bg);border-color:var(--entry-line)"></span>User action</div>
+  <div class="lrow"><span class="sw" style="background:var(--site-bg);border-color:var(--site-line)"></span>Website</div>
+  <div class="lrow"><span class="sw" style="background:var(--form-bg);border-color:var(--form-line)"></span>Zoho form / CRM</div>
+  <div class="lrow"><span class="sw" style="background:var(--msg-bg);border-color:var(--msg-line)"></span>SMS / email</div>
+  <div class="lrow"><span class="sw" style="background:var(--wait-bg);border-color:var(--wait-line)"></span>Timer</div>
+  <div class="lrow"><span class="sw" style="background:var(--drop-bg);border-color:var(--drop-line)"></span>Drop-off</div>
+</div>
+
+<div id="hint" class="chrome">Drag to pan · Ctrl or ⌘ + scroll to zoom · ▾ on a card folds it · click a card to trace its arrows</div>
+
+<div id="viewport">
+  <div id="world">
+    <div id="frame"><div id="frame-chip">Peer Coaching sign-up · Steps 1–4</div></div>
+    <svg id="edges" aria-hidden="true">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4a5568"/></marker>
+        <marker id="ah-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#a2403d"/></marker>
+        <marker id="ah-hl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8db4ff"/></marker>
+      </defs>
+    </svg>
+  </div>
+</div>
+
+<script>
+/*
+ * The client sign-up flow, Steps 1–4, on the same Heptabase-style canvas
+ * as the CPST intake board. Edit NODES / EDGES only. Coordinates are canvas
+ * pixels; `s` is the side an arrow leaves or enters (l r t b). Any card can
+ * be folded down to its title with the ▾ button.
+ */
+const IMG = 'assets/user-flow/';
+const TIMER = `<div class="timer">
+  <div class="tbox"><div class="v">15 min</div><div class="l">Live</div></div>
+  <div class="tbox"><div class="v">2 min</div><div class="l">Test</div></div>
+</div>`;
+
+const NODES = [
+  /* ---- main row: the path a client walks ---- */
+  { id:'search', kind:'entry', x:0, y:300, w:330, tag:'01 · Source · Search',
+    title:'Finds Uplift Path on Google',
+    body:'Searches and clicks the <b>upliftpathwellness.com</b> result.',
+    extra:`<div class="serp">
+      <div class="serp-site"><span class="serp-fav"></span><div><div class="serp-name">Uplift Path</div><div class="serp-url">https://upliftpathwellness.com › peer-coaching</div></div></div>
+      <a class="serp-title" href="https://upliftpathwellness.com/peer-coaching" target="_blank" rel="noopener">Telehealth Peer Support for Adults in Ohio | Uplift Path</a>
+      <div class="serp-desc">Peer support and connections to community resources for adults across Ohio. Meet your Uplift Peer Coach by phone or video, on a schedule that fits around your life.</div>
+    </div>` },
+
+  /* other ways in, stacked around the search card */
+  { id:'mkt', kind:'entry', x:0, bottom:260, w:330, tag:'01 · Source · Marketing',
+    title:'Marketing campaigns',
+    body:'Sees an Uplift Path ad or post (social media, email campaign) and clicks through to the Peer Coaching page.',
+    extra:'<div class="slot">Ad / campaign screenshot: to be added</div>' },
+
+  { id:'ref', kind:'entry', x:0, below:['search', 40], w:330, tag:'01 · Source · Referral',
+    title:'Referrals and direct visits',
+    body:'Referred by a case manager, partner organisation or someone they know, or scans a flyer QR code, and opens the page directly.',
+    extra:'<div class="slot">Referral / flyer screenshot: to be added</div>' },
+
+  { id:'page', kind:'site', x:450, y:300, w:400, tag:'02 · Website',
+    title:'Peer Coaching page',
+    body:'Lands on <a href="https://upliftpathwellness.com/peer-coaching" target="_blank" rel="noopener">/peer-coaching</a> and clicks <b>Get Started</b>.',
+    shots:[['00-peer-coaching-page.webp', 'Individualized Support for Ohio Adults']] },
+
+  { id:'app', kind:'form', x:980, y:300, w:400, tag:'03 · Step 1 · Zoho form',
+    title:'Application popup',
+    body:'Enters <b>first name, last name, email and phone</b>, then Submit. The <b>18+ and live in Ohio</b> box is <b>pre-ticked</b>.',
+    shots:[['01-application-popup.webp', 'Step 1 popup: Find The Right Peer Coach For You']],
+    meta:[['Form','Zoho Form, embedded on the site'],
+          ['On submit','Values go into Zoho CRM']] },
+
+  { id:'elig', kind:'form', x:1520, y:300, w:400, tag:'04 · Step 2 · Zoho form',
+    title:'Eligibility',
+    body:'A <b>Case ID</b> is generated and the user lands here with it in the URL. They pick their Medicaid company and enter Medicaid ID or SSN, date of birth, gender and address.',
+    shots:[['02-eligibility-page.webp', 'Step 2: Check Your Eligibility For Peer Coaching']],
+    meta:[['URL','<code>/cmps?caseid=UPW-259</code>']] },
+
+  { id:'book', kind:'site', x:2060, y:300, w:400, tag:'05 · Step 3 · Scheduling',
+    title:'Picks a session time',
+    body:'Chooses a day and time (Eastern) for a phone or video session, then clicks <b>Confirm Time</b>.',
+    shots:[['05-booking-page.webp', 'Step 3: Choose A Time For Your Session']],
+    meta:[['URL','<code>/booking?caseid=UPW-260</code>']] },
+
+  { id:'consent', kind:'form', x:2600, y:300, w:400, tag:'06 · Step 4 · Zoho form',
+    title:'Signs the consent form',
+    body:'Reviews what stays private, what is shared and with whom, and what to expect from the Peer Coach, then signs. Name and date of birth arrive already filled in.',
+    shots:[['07-consent-page.webp', 'Step 4: Review And Sign Your Consent Form']],
+    meta:[['URL','<code>/consent-form?caseid=UPW-260</code>']] },
+
+  { id:'done', kind:'next', x:3140, y:300, w:400, tag:'07 · Website',
+    title:'Thank-you page',
+    body:'<b>Your Submission Is Complete.</b> The team will be in touch with a next step. Enrollment is done.',
+    shots:[['08-thank-you-page.webp', '']] },
+
+  /* ---- above the row: what fires automatically (bottom-anchored) ---- */
+  { id:'crm', kind:'crm', x:640, bottom:220, w:260, tag:'Zoho CRM',
+    title:'Record created',
+    body:'The Step 1 values land in Zoho CRM as soon as the form is submitted.' },
+
+  { id:'sms', kind:'msg', x:940, bottom:220, w:400, tag:'SMS · instant',
+    title:'Welcome SMS',
+    body:'Sent the moment Step 1 is submitted. Confirms receipt and gives the Case ID.',
+    shots:[['03-sms-step1.png', '']] },
+
+  { id:'bookmsg', kind:'msg', x:2060, bottom:220, w:420, tag:'SMS + Email · on booking',
+    title:'Session booked',
+    body:'Both go out once the time is confirmed. The email confirms Medicaid details are in and gives the appointment time, with <b>Join Now</b>, <b>Reschedule Now</b> and <b>Cancel Now</b> buttons.',
+    shots:[['06-sms-booked.png', 'SMS'], ['10-email-booked.png', 'Email']] },
+
+  { id:'donemsg', kind:'msg', x:2840, bottom:220, w:420, tag:'SMS + Email · on signing',
+    title:'Enrollment complete',
+    body:'The SMS says they are all set and the session is confirmed. The email attaches the <b>signed consent form as a PDF</b>.',
+    shots:[['11-sms-consent.png', 'SMS'], ['12-email-signed-consent.png', 'Email with signed PDF']] },
+
+  /* ---- below the row: user stops partway, reminder after a delay ---- */
+  { id:'back', kind:'drop', x:1520, below:['elig', 160], w:400, tag:'Case A · stops at Step 2',
+    title:'Leaves before finishing Step 2',
+    body:'Step 1 is already in Zoho CRM, but Step 2 is not done.',
+    extra:TIMER },
+
+  { id:'follow', kind:'msg', x:1520, below:['back', 120], w:400, tag:'SMS + Email · reminder',
+    title:'Step 1 reminder',
+    body:'Sent if Step 2 still is not done when the timer runs out. Both point back to Step 2; the email lists all four steps with links.',
+    shots:[['09-sms-followup.png', 'SMS'], ['04-reminder-email.png', 'Email']] },
+
+  { id:'back2', kind:'drop', x:2060, below:['book', 160], w:400, tag:'Case B · stops at Step 3',
+    title:'Leaves before booking a time',
+    body:'Steps 1 and 2 are done, but no session is booked.',
+    extra:TIMER },
+
+  { id:'follow2', kind:'msg', x:2060, below:['back2', 120], w:400, tag:'SMS + Email · reminder',
+    title:'Step 2 reminder',
+    body:'Sent if no time is booked when the timer runs out. Marks Steps 1 and 2 complete and asks them to <b>book the assessment</b>, plus send insurance verification or a photo of their card. Returning clients can reply with their mentor&rsquo;s name to keep the same one.',
+    shots:[['14-email-step2.png', 'Email']],
+    extra:'<div class="slot">SMS screenshot: to be added</div>' },
+];
+
+const EDGES = [
+  { from:'search', fs:'r', to:'page',    ts:'l', label:'clicks result' },
+  { from:'mkt',    fs:'r', to:'page',    ts:'l', label:'clicks ad' },
+  { from:'ref',    fs:'r', to:'page',    ts:'l', label:'opens link' },
+  { from:'page',   fs:'r', to:'app',     ts:'l', label:'Get Started' },
+  { from:'app',    fs:'r', to:'elig',    ts:'l', label:'submit · Case ID' },
+  { from:'elig',   fs:'r', to:'book',    ts:'l', label:'submit' },
+  { from:'book',   fs:'r', to:'consent', ts:'l', label:'Confirm Time' },
+  { from:'consent',fs:'r', to:'done',    ts:'l', label:'signed' },
+
+  { from:'app',    fs:'t', to:'crm',     ts:'b', dashed:true },
+  { from:'app',    fs:'t', to:'sms',     ts:'b', dashed:true },
+  { from:'book',   fs:'t', to:'bookmsg', ts:'b', dashed:true },
+  { from:'consent',fs:'t', to:'donemsg', ts:'b', dashed:true },
+
+  { from:'elig',   fs:'b', to:'back',    ts:'t', label:'backs out', dashed:true, color:'red' },
+  { from:'back',   fs:'b', to:'follow',  ts:'t', label:'after 15 min' },
+  { from:'book',   fs:'b', to:'back2',   ts:'t', label:'backs out', dashed:true, color:'red' },
+  { from:'back2',  fs:'b', to:'follow2', ts:'t', label:'after 15 min' },
+];
+
+/* ---------------- build ---------------- */
+const $ = (s) => document.querySelector(s);
+const viewport = $('#viewport'), world = $('#world'), svg = $('#edges'), frame = $('#frame');
+const NS = 'http://www.w3.org/2000/svg';
+const els = {};
+
+for (const n of NODES) {
+  const d = document.createElement('article');
+  d.className = `node k-${n.kind}${n.pending ? ' pending' : ''}`;
+  d.dataset.id = n.id;
+  d.style.left = n.x + 'px'; d.style.width = n.w + 'px';
+  if (n.y != null) d.style.top = n.y + 'px';
+  d.innerHTML =
+    `<div class="tagrow"><span class="tag">${n.tag}</span>` +
+    `<button class="tog" type="button" aria-expanded="true" aria-label="Fold card"><svg><use href="#chev"/></svg></button></div>` +
+    `<h2 class="title">${n.title}</h2>` +
+    `<div class="content"><p class="body">${n.body}</p>` +
+    (n.shots || []).map(([src, cap]) =>
+      `<figure class="shot"><img src="${IMG + src}" alt="${cap || n.title}" draggable="false">${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`).join('') +
+    (n.extra || '') +
+    (n.meta ? `<div class="meta">${n.meta.map(([k, v]) => `<div class="mrow"><span class="mk">${k}</span><span>${v}</span></div>`).join('')}</div>` : '') +
+    `</div>`;
+  world.appendChild(d);
+  els[n.id] = d;
+  d.querySelectorAll('img').forEach((img) => img.addEventListener('load', relayout));
+}
+
+// Cards above the row hang from `bottom`; cards under a card sit `below` it.
+// Both are re-placed whenever a card folds or an image loads.
+function place() {
+  for (const n of NODES) {
+    const d = els[n.id];
+    if (n.bottom != null) d.style.top = (n.bottom - d.offsetHeight) + 'px';
+  }
+  for (const n of NODES) {
+    if (!n.below) continue;
+    const [ref, gap] = n.below, r = els[ref];
+    els[n.id].style.top = (r.offsetTop + r.offsetHeight + gap) + 'px';
+  }
+}
+
+const rect = (id) => { const e = els[id]; return { x:e.offsetLeft, y:e.offsetTop, w:e.offsetWidth, h:e.offsetHeight }; };
+const DIR = { l:[-1,0], r:[1,0], t:[0,-1], b:[0,1] };
+function point(id, side) {
+  const r = rect(id);
+  return side === 'l' ? [r.x, r.y + r.h/2] : side === 'r' ? [r.x + r.w, r.y + r.h/2]
+       : side === 't' ? [r.x + r.w/2, r.y] : [r.x + r.w/2, r.y + r.h];
+}
+
+const edgeEls = [];
+function drawEdges() {
+  edgeEls.forEach(({ path, label }) => { path.remove(); label?.remove(); });
+  edgeEls.length = 0;
+  for (const e of EDGES) {
+    const [x1, y1] = point(e.from, e.fs), [x2, y2] = point(e.to, e.ts);
+    const d = Math.max(60, Math.hypot(x2 - x1, y2 - y1) * 0.35);
+    const a = DIR[e.fs], b = DIR[e.ts];
+    const path = document.createElementNS(NS, 'path');
+    path.setAttribute('d', `M${x1} ${y1} C${x1 + a[0]*d} ${y1 + a[1]*d} ${x2 + b[0]*d} ${y2 + b[1]*d} ${x2} ${y2}`);
+    path.setAttribute('class', `edge${e.dashed ? ' dashed' : ''}${e.color ? ' ' + e.color : ''}`);
+    const mk = e.color === 'red' ? 'ah-red' : 'ah';
+    path.setAttribute('marker-end', `url(#${mk})`);
+    svg.appendChild(path);
+    let label = null;
+    if (e.label) {
+      const m = path.getPointAtLength(path.getTotalLength() / 2);
+      label = document.createElement('div');
+      label.className = 'elabel'; label.textContent = e.label;
+      label.style.left = m.x + 'px'; label.style.top = m.y + 'px';
+      world.appendChild(label);
+    }
+    edgeEls.push({ path, label, e, mk });
+  }
+  if (selected) select(selected);
+}
+
+let bounds = { x:0, y:0, w:1, h:1 };
+function layoutFrame() {
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  for (const n of NODES) { const r = rect(n.id); x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h); }
+  const pad = 70;
+  bounds = { x:x0 - pad, y:y0 - pad, w:x1 - x0 + pad*2, h:y1 - y0 + pad*2 };
+  Object.assign(frame.style, { left:bounds.x + 'px', top:bounds.y + 'px', width:bounds.w + 'px', height:bounds.h + 'px' });
+}
+function relayout() { place(); layoutFrame(); drawEdges(); }
+
+/* ---------------- fold / unfold ---------------- */
+function setOpen(id, open) {
+  els[id].classList.toggle('collapsed', !open);
+  els[id].querySelector('.tog').setAttribute('aria-expanded', String(open));
+}
+function toggle(id) { setOpen(id, els[id].classList.contains('collapsed')); relayout(); }
+function setAll(open) { NODES.forEach((n) => setOpen(n.id, open)); relayout(); fit(true); }
+
+/* ---------------- pan / zoom ---------------- */
+let view = { x:0, y:0, k:1 };
+const K_MIN = 0.2, K_MAX = 2.5;
+function apply(animate) {
+  world.classList.toggle('anim', !!animate);
+  world.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.k})`;
+  $('#zoomread').textContent = Math.round(view.k * 100) + '%';
+}
+function zoomAt(cx, cy, factor, animate) {
+  const k = Math.min(K_MAX, Math.max(K_MIN, view.k * factor));
+  const f = k / view.k;
+  view.x = cx - (cx - view.x) * f; view.y = cy - (cy - view.y) * f; view.k = k;
+  apply(animate);
+}
+function fit(animate) {
+  const vw = innerWidth, vh = innerHeight;
+  const padL = 80, padR = 24, padT = 90, padB = 24;
+  const k = Math.min((vw - padL - padR) / bounds.w, (vh - padT - padB) / bounds.h, 1);
+  view.k = k;
+  view.x = padL + ((vw - padL - padR) - bounds.w * k) / 2 - bounds.x * k;
+  view.y = padT + ((vh - padT - padB) - bounds.h * k) / 2 - bounds.y * k;
+  apply(animate);
+}
+
+viewport.addEventListener('wheel', (ev) => {
+  ev.preventDefault();
+  if (ev.ctrlKey || ev.metaKey) zoomAt(ev.clientX, ev.clientY, Math.exp(-ev.deltaY * 0.01), false);
+  else { view.x -= ev.deltaX; view.y -= ev.deltaY; apply(false); }
+}, { passive:false });
+
+let drag = null, moved = false;
+viewport.addEventListener('pointerdown', (ev) => {
+  // Links inside cards keep their normal click; everything else pans.
+  if (ev.target.closest('a')) return;
+  // The card and fold button are read here, not on pointerup: pointer capture
+  // retargets every later event to the viewport.
+  const node = ev.target.closest('.node')?.dataset.id ?? null;
+  drag = { x:ev.clientX, y:ev.clientY, vx:view.x, vy:view.y, node, tog: !!ev.target.closest('.tog') };
+  moved = false;
+  viewport.setPointerCapture(ev.pointerId);
+});
+viewport.addEventListener('pointermove', (ev) => {
+  if (!drag) return;
+  const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
+  if (!moved && Math.hypot(dx, dy) > 4) { moved = true; viewport.classList.add('panning'); }
+  if (moved) { view.x = drag.vx + dx; view.y = drag.vy + dy; apply(false); }
+});
+const endDrag = () => { drag = null; viewport.classList.remove('panning'); };
+viewport.addEventListener('pointerup', () => {
+  const wasClick = !moved, node = drag?.node ?? null, tog = drag?.tog;
+  endDrag();
+  if (!wasClick) return;
+  if (tog && node) toggle(node); else select(node);
+});
+viewport.addEventListener('pointercancel', endDrag);
+// Keyboard users reach the fold buttons with Tab.
+world.addEventListener('keydown', (ev) => {
+  const t = ev.target.closest('.tog');
+  if (t && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); toggle(t.closest('.node').dataset.id); }
+});
+
+$('#zin').onclick  = () => zoomAt(innerWidth/2, innerHeight/2, 1.25, true);
+$('#zout').onclick = () => zoomAt(innerWidth/2, innerHeight/2, 0.8, true);
+$('#zfit').onclick = () => fit(true);
+$('#openall').onclick  = () => setAll(true);
+$('#closeall').onclick = () => setAll(false);
+addEventListener('keydown', (ev) => {
+  if (ev.target.closest?.('.tog')) return;
+  if (ev.key === '+' || ev.key === '=') $('#zin').click();
+  else if (ev.key === '-') $('#zout').click();
+  else if (ev.key === '0') $('#zfit').click();
+  else if (ev.key === 'e' || ev.key === 'E') setAll(true);
+  else if (ev.key === 'c' || ev.key === 'C') setAll(false);
+  else if (ev.key === 'Escape') select(null);
+});
+
+/* ---------------- selection: trace a card's arrows ---------------- */
+let selected = null;
+function select(id) {
+  selected = id;
+  const linked = new Set(id ? [id] : []);
+  edgeEls.forEach(({ e }) => { if (id && (e.from === id || e.to === id)) { linked.add(e.from); linked.add(e.to); } });
+  for (const n of NODES) {
+    els[n.id].classList.toggle('hl', n.id === id);
+    els[n.id].classList.toggle('dim', !!id && !linked.has(n.id));
+  }
+  edgeEls.forEach(({ path, label, e, mk }) => {
+    const on = !!id && (e.from === id || e.to === id);
+    path.classList.toggle('hl', on);
+    path.classList.toggle('dim', !!id && !on);
+    label?.classList.toggle('dim', !!id && !on);
+    path.setAttribute('marker-end', `url(#${on ? 'ah-hl' : mk})`);
+  });
+}
+
+/* ---------------- start ---------------- */
+function init() { relayout(); fit(false); }
+(document.fonts?.ready ?? Promise.resolve()).then(init);
+init();
+addEventListener('load', init);
+addEventListener('resize', () => fit(false));
+</script>
+</body>
+</html>
