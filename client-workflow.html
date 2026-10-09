@@ -276,12 +276,12 @@ const NODES = [
 
   { id:'sms', kind:'msg', x:940, bottom:220, w:400, tag:'SMS · instant',
     title:'Welcome SMS',
-    body:'Sent the moment Step 1 is submitted. Confirms receipt and gives the Case ID.',
+    body:'Sent the moment Step 1 is submitted. Confirms receipt and links straight to <b>Step 2 &ndash; Medicaid ID Verification</b> with the Case ID.',
     shots:[['03-sms-step1.png', '']] },
 
   { id:'bookmsg', kind:'msg', x:2060, bottom:220, w:420, tag:'SMS + Email · on booking',
     title:'Session booked',
-    body:'Both go out once the time is confirmed. The email confirms Medicaid details are in and gives the appointment time, with <b>Join Now</b>, <b>Reschedule Now</b> and <b>Cancel Now</b> buttons.',
+    body:'Both go out once the time is confirmed. The SMS links to <b>Step 4 &ndash; Consent Form</b>, the last step before the session is confirmed. The email confirms Medicaid details are in and gives the appointment time, with <b>Join Now</b>, <b>Reschedule Now</b> and <b>Cancel Now</b> buttons.',
     shots:[['06-sms-booked.png', 'SMS'], ['10-email-booked.png', 'Email']] },
 
   { id:'donemsg', kind:'msg', x:2840, bottom:220, w:420, tag:'SMS + Email · on signing',
@@ -308,8 +308,7 @@ const NODES = [
   { id:'follow2', kind:'msg', x:2060, below:['back2', 120], w:400, tag:'SMS + Email · reminder',
     title:'Step 2 reminder',
     body:'Sent if no time is booked when the timer runs out. Marks Steps 1 and 2 complete and asks them to <b>book the assessment</b>, plus send insurance verification or a photo of their card. Returning clients can reply with their mentor&rsquo;s name to keep the same one.',
-    shots:[['14-email-step2.png', 'Email']],
-    extra:'<div class="slot">SMS screenshot: to be added</div>' },
+    shots:[['15-sms-step2.png', 'SMS'], ['14-email-step2.png', 'Email']] },
 ];
 
 const EDGES = [
