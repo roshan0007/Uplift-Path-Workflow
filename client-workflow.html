@@ -274,10 +274,11 @@ const NODES = [
     title:'Record created',
     body:'The Step 1 values land in Zoho CRM as soon as the form is submitted.' },
 
-  { id:'sms', kind:'msg', x:940, bottom:220, w:400, tag:'SMS · instant',
-    title:'Welcome SMS',
-    body:'Sent the moment Step 1 is submitted. Confirms receipt and links straight to <b>Step 2 &ndash; Medicaid ID Verification</b> with the Case ID.',
-    shots:[['03-sms-step1.png', '']] },
+  { id:'sms', kind:'msg', x:940, bottom:220, w:400, tag:'SMS + Email · instant',
+    title:'Welcome SMS + Email',
+    body:'Both go out the moment Step 1 is submitted. They confirm receipt and link straight to <b>Step 2 &ndash; Medicaid ID Verification</b> with the Case ID.',
+    shots:[['03-sms-step1.png', 'SMS']],
+    extra:'<div class="slot">Welcome email screenshot: to be added</div>' },
 
   { id:'bookmsg', kind:'msg', x:2060, bottom:220, w:420, tag:'SMS + Email · on booking',
     title:'Session booked',
