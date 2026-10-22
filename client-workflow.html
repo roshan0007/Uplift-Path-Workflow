@@ -322,12 +322,12 @@ const NODES = [
     shots:[['19-crm-status-history.jpg', 'Status history on the contact: every status with the time and who']],
     meta:[['Owner','Assessor (Julia)'],['Fields','Preferred Coach Gender, Age Group, Background, Industry, Language']] },
 
-  { id:'sugg', kind:'crm', x:5760, y:300, w:400, tag:'12 · Zoho CRM · automatic',
+  { id:'sugg', kind:'crm', x:5760, y:300, w:440, tag:'12 · Zoho CRM · automatic',
     title:'System suggests 3 coaches',
     status:{ t:'Pairing Suggested', c:'s7b', note:'set automatically, within seconds' },
-    body:'As soon as preferences are saved, CRM reads the <b>Coach Profiles</b> list and ignores any coach who is not active or is already at their maximum caseload. Each remaining coach earns points for what matches: <b>gender 3, age group 2, each background 3, each industry 2, each language 2</b>. The top three go onto the client&rsquo;s record as <b>Coach Suggestions</b> (preferred coach, reason, caseload), and the status becomes <b>Pairing Suggested</b>. A tie goes to the coach with the lowest caseload. If no coach has room, the field says <i>NO MATCH</i> instead. Nobody is paired yet: a person still decides.',
-    shots:[['20-crm-coach-suggestions.png', 'Preferences and the three suggestions on the client record'], ['21-crm-coach-profile.png', 'A coach profile: the details the matching reads']],
-    meta:[['Runs','Automatically (CRM workflow + function)'],['Reads','Coach Profiles module']] },
+    body:'Runs by itself the moment preferences are saved. <b>1.</b> It reads every coach in <b>Coach Profiles</b> and skips anyone who is <b>not active</b> or whose <b>caseload is already at their maximum</b>. <b>2.</b> Each remaining coach earns points for every match with what the client picked (table below). A coach is never ruled out for a mismatch; a weak match just ranks lower. <b>3.</b> Coaches are ranked by points, and a tie goes to the one with the <b>lower caseload</b>. <b>4.</b> The top three are written to <b>Coach Suggestions</b> (name, why, caseload) and the status becomes <b>Pairing Suggested</b>. If nobody has room, the field says <i>NO MATCH</i> and the status stays Ready to Pair. Nobody is paired yet: a person decides.',
+    meta:[['Gender','+3 if the coach&rsquo;s gender is one the client picked'],['Age group','+2 if the coach&rsquo;s age group is one the client picked'],['Background','+3 for each background they share'],['Industry','+2 for each industry they share'],['Language','+2 for each language they share'],['Empty pick','no points, so it counts as no preference'],['Tie','lower current caseload wins'],['Example','Female + Parenting + Spanish + 18-29: Elena 3 + 3 + 2 + 2 = <b>10</b>, Maya 3 + 3 = 6, Diane 3']],
+    shots:[['20-crm-coach-suggestions.png', 'Preferences and the three suggestions on the client record'], ['21-crm-coach-profile.png', 'A coach profile: the details the matching reads']] },
 
   { id:'pair', kind:'next', pending:true, x:6280, y:300, w:400, tag:'13 · Next · not built yet',
     title:'A person approves one coach',
