@@ -28,6 +28,7 @@
     --wait-bg:#33290f;   --wait-line:#6a561a;   --wait-accent:#ecca5f;
     --drop-bg:#351618;   --drop-line:#78302f;   --drop-accent:#ff948f;
     --next-bg:#12301f;   --next-line:#21593c;   --next-accent:#74dfa5;
+    --charm-bg:#0f2f33;  --charm-line:#1f5d63;  --charm-accent:#6fd6d6;
 
     --mono:'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
   }
@@ -83,6 +84,23 @@
   .k-wait {--n-bg:var(--wait-bg); --n-line:var(--wait-line); --n-accent:var(--wait-accent);}
   .k-drop {--n-bg:var(--drop-bg); --n-line:var(--drop-line); --n-accent:var(--drop-accent);}
   .k-next {--n-bg:var(--next-bg); --n-line:var(--next-line); --n-accent:var(--next-accent);}
+  .k-charm{--n-bg:var(--charm-bg);--n-line:var(--charm-line);--n-accent:var(--charm-accent);}
+
+  /* CRM "Journey Status" shown on a card: same stage names and colours as the CRM */
+  .status{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin:0 0 10px; }
+  .status .sk{ font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); }
+  .status .sn{ font-size:11.5px; color:var(--muted); }
+  .pill{ display:inline-block; border-radius:999px; padding:3px 11px; font-size:12px; font-weight:500; line-height:1.35; color:#0b0f14; }
+  .pill.s1{ background:#cfd3da; }
+  .pill.s2{ background:#8fd0ff; }
+  .pill.s3{ background:#4aa3ff; }
+  .pill.s4{ background:#c58bff; }
+  .pill.s5{ background:#b5b8bd; }
+  .pill.s6{ background:#9aa6ff; }
+  .pill.s7{ background:#ff9a4d; }
+  .pill.s8{ background:#4aa3ff; }
+  .pill.s9{ background:#5fd08a; }
+  .pill.planned{ background:transparent; color:var(--text-soft); border:1px dashed var(--muted); }
 
   .tagrow{ display:flex; align-items:center; gap:8px; }
   .tag{ font-family:var(--mono); font-size:10.5px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--n-accent); }
@@ -179,6 +197,7 @@
   <div class="lrow"><span class="sw" style="background:var(--entry-bg);border-color:var(--entry-line)"></span>User action</div>
   <div class="lrow"><span class="sw" style="background:var(--site-bg);border-color:var(--site-line)"></span>Website</div>
   <div class="lrow"><span class="sw" style="background:var(--form-bg);border-color:var(--form-line)"></span>Zoho form / CRM</div>
+  <div class="lrow"><span class="sw" style="background:var(--charm-bg);border-color:var(--charm-line)"></span>Charm (EHR)</div>
   <div class="lrow"><span class="sw" style="background:var(--msg-bg);border-color:var(--msg-line)"></span>SMS / email</div>
   <div class="lrow"><span class="sw" style="background:var(--wait-bg);border-color:var(--wait-line)"></span>Timer</div>
   <div class="lrow"><span class="sw" style="background:var(--drop-bg);border-color:var(--drop-line)"></span>Drop-off</div>
@@ -188,7 +207,7 @@
 
 <div id="viewport">
   <div id="world">
-    <div id="frame"><div id="frame-chip">Peer Coaching sign-up · Steps 1–4</div></div>
+    <div id="frame"><div id="frame-chip">Peer Coaching · sign-up (Steps 1–4) → Charm → coaching</div></div>
     <svg id="edges" aria-hidden="true">
       <defs>
         <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4a5568"/></marker>
@@ -201,10 +220,12 @@
 
 <script>
 /*
- * The client sign-up flow, Steps 1–4, on the same Heptabase-style canvas
- * as the CPST intake board. Edit NODES / EDGES only. Coordinates are canvas
- * pixels; `s` is the side an arrow leaves or enters (l r t b). Any card can
- * be folded down to its title with the ▾ button.
+ * The client sign-up flow, Steps 1–4, then Charm and coaching, on the same
+ * Heptabase-style canvas as the CPST intake board. Edit NODES / EDGES only.
+ * Coordinates are canvas pixels; `s` is the side an arrow leaves or enters
+ * (l r t b). Any card can be folded down to its title with the ▾ button.
+ * `status:{t,c,note}` puts the CRM Journey Status pill on a card (c = s1..s9
+ * or 'planned'); the names match the CRM picklist exactly.
  */
 const IMG = 'assets/user-flow/';
 const TIMER = `<div class="timer">
@@ -241,6 +262,7 @@ const NODES = [
 
   { id:'app', kind:'form', x:980, y:300, w:400, tag:'03 · Step 1 · Zoho form',
     title:'Application popup',
+    status:{ t:'Application Submitted', c:'s1', note:'set instantly on submit' },
     body:'Enters <b>first name, last name, email and phone</b>, then Submit. The <b>18+ and live in Ohio</b> box is <b>pre-ticked</b>.',
     shots:[['01-application-popup.webp', 'Step 1 popup: Find The Right Peer Coach For You']],
     meta:[['Form','Zoho Form, embedded on the site'],
@@ -248,18 +270,21 @@ const NODES = [
 
   { id:'elig', kind:'form', x:1520, y:300, w:400, tag:'04 · Step 2 · Zoho form',
     title:'Eligibility',
+    status:{ t:'Eligibility Completed', c:'s2', note:'set instantly on submit' },
     body:'A <b>Case ID</b> is generated and the user lands here with it in the URL. They pick their Medicaid company and enter Medicaid ID or SSN, date of birth, gender and address.',
     shots:[['02-eligibility-page.webp', 'Step 2: Check Your Eligibility For Peer Coaching']],
     meta:[['URL','<code>/cmps?caseid=UPW-259</code>']] },
 
   { id:'book', kind:'site', x:2060, y:300, w:400, tag:'05 · Step 3 · Scheduling',
     title:'Picks a session time',
+    status:{ t:'Appointment Booked', c:'s3', note:'set instantly on booking' },
     body:'Chooses a day and time (Eastern) for a phone or video session, then clicks <b>Confirm Time</b>.',
     shots:[['05-booking-page.webp', 'Step 3: Choose A Time For Your Session']],
     meta:[['URL','<code>/booking?caseid=UPW-260</code>']] },
 
   { id:'consent', kind:'form', x:2600, y:300, w:400, tag:'06 · Step 4 · Zoho form',
     title:'Signs the consent form',
+    status:{ t:'Consent Signed', c:'s4', note:'set about 2 min after signing' },
     body:'Reviews what stays private, what is shared and with whom, and what to expect from the Peer Coach, then signs. Name and date of birth arrive already filled in.',
     shots:[['07-consent-page.webp', 'Step 4: Review And Sign Your Consent Form']],
     meta:[['URL','<code>/consent-form?caseid=UPW-260</code>']] },
@@ -269,10 +294,49 @@ const NODES = [
     body:'<b>Your Submission Is Complete.</b> The team will be in touch with a next step. Enrollment is done.',
     shots:[['08-thank-you-page.webp', '']] },
 
+  /* ---- after sign-up: Charm, assessment, preferences, pairing, coaching ---- */
+  { id:'conv', kind:'crm', x:3680, y:300, w:400, tag:'08 · Zoho CRM → Charm',
+    title:'Converted to Patient',
+    status:{ t:'Converted to Patient', c:'s5', note:'set when the Charm ID comes back' },
+    body:'Once enrollment is complete, the team opens the client in Zoho CRM and clicks <b>Convert to Patient</b>. A <b>patient is created in Charm</b>, and Charm&rsquo;s <b>Patient Record ID</b> and <b>Patient ID</b> are written back to the CRM contact. That is what moves the status. The automatic reminders stop from here. If the contact already has a Patient Record ID, the button says <i>Patient already exists</i> and does nothing.',
+    shots:[['16-crm-convert-charm.jpg', 'Charm Health section on the CRM contact after converting']],
+    meta:[['Owner','Intake team (to confirm)'],['Button','Contact page → Convert to Patient']] },
+
+  { id:'note', kind:'charm', x:4200, y:300, w:400, tag:'09 · Charm',
+    title:'Assessor writes the assessment note',
+    body:'In Charm, the assessor opens <b>Chart Notes → + Encounter</b>, picks the patient and creates an encounter with Visit Type <b>Assessment</b> (spelled &ldquo;Assesstment&rdquo; in Charm&rsquo;s list), the mode (in person, phone or video) and a chart type. She writes the note and <b>signs</b> it; a new note starts as <i>Unsigned</i>. This step happens only in Charm; nothing in CRM reads it yet.',
+    shots:[['17-charm-new-encounter.jpg', 'New Encounter form in Charm'], ['18-charm-encounter-list.jpg', 'The note on the patient, still Unsigned']],
+    meta:[['Owner','Assessor (Julia)'],['Where','Charm → Chart Notes']] },
+
+  { id:'adone', kind:'crm', x:4720, y:300, w:400, tag:'10 · Zoho CRM',
+    title:'Marks the assessment done in CRM',
+    status:{ t:'Assessment Done', c:'s6', note:'set when the date is filled' },
+    body:'After the assessment, the assessor fills <b>Assessment Done On</b> (a date) in the <b>Assessment</b> section of the contact. That moves the status. It is a manual entry, separate from the note in Charm.',
+    meta:[['Owner','Assessor (Julia)'],['Field','Assessment Done On']] },
+
+  { id:'prefs', kind:'crm', x:5240, y:300, w:400, tag:'11 · Zoho CRM',
+    title:'Captures the coach preferences',
+    status:{ t:'Ready to Pair', c:'s7', note:'set when preferences are saved' },
+    body:'The assessor asks what kind of coach the client wants (for example gender, age, background or industry) and writes it in <b>Coach Preferences</b>, a free-text box in the same section. Saving it moves the client to <b>Ready to Pair</b>.',
+    shots:[['19-crm-status-history.jpg', 'Status history on the contact: every status with the time and who']],
+    meta:[['Owner','Assessor (Julia)'],['Field','Coach Preferences']] },
+
+  { id:'pair', kind:'next', pending:true, x:5760, y:300, w:400, tag:'12 · Next phase · not built yet',
+    title:'Matched with a peer coach',
+    status:{ t:'Client Paired', c:'planned', note:'planned' },
+    body:'The client is matched with a peer coach (QBHS) using the preferences and the coach&rsquo;s free capacity (each coach has a maximum caseload, for example 10 clients). The aim is <b>automatic within minutes, with a manual override</b>, then an email and SMS to the coach and the client, and an alert if nobody is paired in time. Today there is no automatic matching and no Coach field in CRM.',
+    meta:[['Owner','Coach team (to confirm)']] },
+
+  { id:'coach', kind:'crm', x:6280, y:300, w:400, tag:'13 · Zoho CRM',
+    title:'Coaching starts',
+    status:{ t:'Active Coaching', c:'s9', note:'set when the start date is filled' },
+    body:'When coaching begins, the <b>Coaching Start Date</b> is filled on the contact and the status becomes <b>Active Coaching</b>. Later, this is where the client starts to count in the coach&rsquo;s caseload.',
+    meta:[['Owner','Coach'],['Field','Coaching Start Date']] },
+
   /* ---- above the row: what fires automatically (bottom-anchored) ---- */
   { id:'crm', kind:'crm', x:640, bottom:220, w:260, tag:'Zoho CRM',
     title:'Record created',
-    body:'The Step 1 values land in Zoho CRM as soon as the form is submitted.' },
+    body:'The Step 1 values land in Zoho CRM as soon as the form is submitted, and the client&rsquo;s <b>Journey Status</b> is set to Application Submitted. Each later step moves the status forward; it never goes backwards.' },
 
   { id:'sms', kind:'msg', x:940, bottom:220, w:400, tag:'SMS + Email · instant',
     title:'Welcome SMS + Email',
@@ -292,6 +356,7 @@ const NODES = [
   /* ---- below the row: user stops partway, reminder after a delay ---- */
   { id:'back', kind:'drop', x:1520, below:['elig', 160], w:400, tag:'Case A · stops at Step 2',
     title:'Leaves before finishing Step 2',
+    status:{ t:'Application Submitted', c:'s1', note:'stays as is, reminders do not change it' },
     body:'Step 1 is already in Zoho CRM, but Step 2 is not done.',
     extra:TIMER },
 
@@ -302,6 +367,7 @@ const NODES = [
 
   { id:'back2', kind:'drop', x:2060, below:['book', 160], w:400, tag:'Case B · stops at Step 3',
     title:'Leaves before booking a time',
+    status:{ t:'Eligibility Completed', c:'s2', note:'stays as is, reminders do not change it' },
     body:'Steps 1 and 2 are done, but no session is booked.',
     extra:TIMER },
 
@@ -320,6 +386,12 @@ const EDGES = [
   { from:'elig',   fs:'r', to:'book',    ts:'l', label:'submit' },
   { from:'book',   fs:'r', to:'consent', ts:'l', label:'Confirm Time' },
   { from:'consent',fs:'r', to:'done',    ts:'l', label:'signed' },
+  { from:'done',   fs:'r', to:'conv',    ts:'l', label:'team converts' },
+  { from:'conv',   fs:'r', to:'note',    ts:'l', label:'assessment visit' },
+  { from:'note',   fs:'r', to:'adone',   ts:'l', label:'note signed' },
+  { from:'adone',  fs:'r', to:'prefs',   ts:'l', label:'preferences' },
+  { from:'prefs',  fs:'r', to:'pair',    ts:'l', label:'ready to pair', dashed:true },
+  { from:'pair',   fs:'r', to:'coach',   ts:'l', label:'coach starts', dashed:true },
 
   { from:'app',    fs:'t', to:'crm',     ts:'b', dashed:true },
   { from:'app',    fs:'t', to:'sms',     ts:'b', dashed:true },
@@ -348,6 +420,7 @@ for (const n of NODES) {
     `<div class="tagrow"><span class="tag">${n.tag}</span>` +
     `<button class="tog" type="button" aria-expanded="true" aria-label="Fold card"><svg><use href="#chev"/></svg></button></div>` +
     `<h2 class="title">${n.title}</h2>` +
+    (n.status ? `<div class="status"><span class="sk">CRM status</span><span class="pill ${n.status.c}">${n.status.t}</span>${n.status.note ? `<span class="sn">${n.status.note}</span>` : ''}</div>` : '') +
     `<div class="content"><p class="body">${n.body}</p>` +
     (n.shots || []).map(([src, cap]) =>
       `<figure class="shot"><img src="${IMG + src}" alt="${cap || n.title}" draggable="false">${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`).join('') +
