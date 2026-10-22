@@ -98,6 +98,7 @@
   .pill.s5{ background:#b5b8bd; }
   .pill.s6{ background:#9aa6ff; }
   .pill.s7{ background:#ff9a4d; }
+  .pill.s7b{ background:#b9e6a3; }
   .pill.s8{ background:#4aa3ff; }
   .pill.s9{ background:#5fd08a; }
   .pill.planned{ background:transparent; color:var(--text-soft); border:1px dashed var(--muted); }
@@ -224,7 +225,7 @@
  * Heptabase-style canvas as the CPST intake board. Edit NODES / EDGES only.
  * Coordinates are canvas pixels; `s` is the side an arrow leaves or enters
  * (l r t b). Any card can be folded down to its title with the ▾ button.
- * `status:{t,c,note}` puts the CRM Journey Status pill on a card (c = s1..s9
+ * `status:{t,c,note}` puts the CRM Journey Status pill on a card (c = s1..s9, s7b
  * or 'planned'); the names match the CRM picklist exactly.
  */
 const IMG = 'assets/user-flow/';
@@ -317,17 +318,24 @@ const NODES = [
   { id:'prefs', kind:'crm', x:5240, y:300, w:400, tag:'11 · Zoho CRM',
     title:'Captures the coach preferences',
     status:{ t:'Ready to Pair', c:'s7', note:'set when preferences are saved' },
-    body:'The assessor asks what kind of coach the client wants (for example gender, age, background or industry) and writes it in <b>Coach Preferences</b>, a free-text box in the same section. Saving it moves the client to <b>Ready to Pair</b>.',
+    body:'The assessor asks what kind of coach the client wants and picks it from five <b>multi-select dropdowns</b> in the <b>Assessment</b> section: <b>gender, age group, background, industry and language</b>. The options are the same lists the coaches are described with, so the system can match them. Saving any of them moves the client to <b>Ready to Pair</b> and starts the matching in the next step. Leaving a dropdown empty means no preference.',
     shots:[['19-crm-status-history.jpg', 'Status history on the contact: every status with the time and who']],
-    meta:[['Owner','Assessor (Julia)'],['Field','Coach Preferences']] },
+    meta:[['Owner','Assessor (Julia)'],['Fields','Preferred Coach Gender, Age Group, Background, Industry, Language']] },
 
-  { id:'pair', kind:'next', pending:true, x:5760, y:300, w:400, tag:'12 · Next phase · not built yet',
-    title:'Matched with a peer coach',
+  { id:'sugg', kind:'crm', x:5760, y:300, w:400, tag:'12 · Zoho CRM · automatic',
+    title:'System suggests 3 coaches',
+    status:{ t:'Pairing Suggested', c:'s7b', note:'set automatically, within seconds' },
+    body:'As soon as preferences are saved, CRM reads the <b>Coach Profiles</b> list and ignores any coach who is not active or is already at their maximum caseload. Each remaining coach earns points for what matches: <b>gender 3, age group 2, each background 3, each industry 2, each language 2</b>. The top three go onto the client&rsquo;s record as <b>Coach Suggestions</b> (preferred coach, reason, caseload), and the status becomes <b>Pairing Suggested</b>. A tie goes to the coach with the lowest caseload. If no coach has room, the field says <i>NO MATCH</i> instead. Nobody is paired yet: a person still decides.',
+    shots:[['20-crm-coach-suggestions.png', 'Preferences and the three suggestions on the client record'], ['21-crm-coach-profile.png', 'A coach profile: the details the matching reads']],
+    meta:[['Runs','Automatically (CRM workflow + function)'],['Reads','Coach Profiles module']] },
+
+  { id:'pair', kind:'next', pending:true, x:6280, y:300, w:400, tag:'13 · Next · not built yet',
+    title:'A person approves one coach',
     status:{ t:'Client Paired', c:'planned', note:'planned' },
-    body:'The client is matched with a peer coach (QBHS) using the preferences and the coach&rsquo;s free capacity (each coach has a maximum caseload, for example 10 clients). The aim is <b>automatic within minutes, with a manual override</b>, then an email and SMS to the coach and the client, and an alert if nobody is paired in time. Today there is no automatic matching and no Coach field in CRM.',
-    meta:[['Owner','Coach team (to confirm)']] },
+    body:'Julia or the intake team reads the three suggestions and approves one. That should set the client&rsquo;s <b>Coach</b>, move the status to <b>Client Paired</b>, add one to the coach&rsquo;s caseload, and send an email and SMS to the coach and the client (wording to be approved). An alert should go out if a client is still not paired after a set time. None of this exists yet; today the suggestions only sit on the record.',
+    meta:[['Owner','Assessor / intake (to confirm)']] },
 
-  { id:'coach', kind:'crm', x:6280, y:300, w:400, tag:'13 · Zoho CRM',
+  { id:'coach', kind:'crm', x:6800, y:300, w:400, tag:'14 · Zoho CRM',
     title:'Coaching starts',
     status:{ t:'Active Coaching', c:'s9', note:'set when the start date is filled' },
     body:'When coaching begins, the <b>Coaching Start Date</b> is filled on the contact and the status becomes <b>Active Coaching</b>. Later, this is where the client starts to count in the coach&rsquo;s caseload.',
@@ -390,7 +398,8 @@ const EDGES = [
   { from:'conv',   fs:'r', to:'note',    ts:'l', label:'assessment visit' },
   { from:'note',   fs:'r', to:'adone',   ts:'l', label:'note signed' },
   { from:'adone',  fs:'r', to:'prefs',   ts:'l', label:'preferences' },
-  { from:'prefs',  fs:'r', to:'pair',    ts:'l', label:'ready to pair', dashed:true },
+  { from:'prefs',  fs:'r', to:'sugg',    ts:'l', label:'preferences saved' },
+  { from:'sugg',   fs:'r', to:'pair',    ts:'l', label:'person approves', dashed:true },
   { from:'pair',   fs:'r', to:'coach',   ts:'l', label:'coach starts', dashed:true },
 
   { from:'app',    fs:'t', to:'crm',     ts:'b', dashed:true },
