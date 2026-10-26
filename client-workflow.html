@@ -99,6 +99,7 @@
   .pill.s6{ background:#9aa6ff; }
   .pill.s7{ background:#ff9a4d; }
   .pill.s7b{ background:#b9e6a3; }
+  .pill.s7c{ background:#7cc4ff; }
   .pill.s8{ background:#4aa3ff; }
   .pill.s9{ background:#5fd08a; }
   .pill.planned{ background:transparent; color:var(--text-soft); border:1px dashed var(--muted); }
@@ -225,7 +226,7 @@
  * Heptabase-style canvas as the CPST intake board. Edit NODES / EDGES only.
  * Coordinates are canvas pixels; `s` is the side an arrow leaves or enters
  * (l r t b). Any card can be folded down to its title with the ▾ button.
- * `status:{t,c,note}` puts the CRM Journey Status pill on a card (c = s1..s9, s7b
+ * `status:{t,c,note}` puts the CRM Journey Status pill on a card (c = s1..s9, s7b, s7c
  * or 'planned'); the names match the CRM picklist exactly.
  */
 const IMG = 'assets/user-flow/';
@@ -331,14 +332,14 @@ const NODES = [
 
   { id:'offer', kind:'crm', x:6280, y:300, w:440, tag:'13 · Zoho CRM · built',
     title:'Julia shortlists coaches and sends the offer',
-    status:{ t:'Pairing Suggested', c:'s7b', note:'does not change at this step' },
-    body:'Julia reads the suggestions and picks one or more coaches in <b>Offered Coaches</b> on the contact. She can pick any coach, not only the suggested ones. Then she ticks <b>Send Offer</b> and saves. A rule runs and <b>each picked coach gets an email</b> (shown above) with a link to accept or decline. The email carries the case ID only, <b>no client details</b>. Coaches with a placeholder or missing email address are <b>skipped</b>, and every result is logged on the contact under <b>Automation Logs</b> (Offer, Email, Sent or Skipped). A coach who was already emailed is not emailed again; to send again, untick and tick the box.',
-    shots:[['22-crm-offered-coaches.png', 'Offered Coaches and the Send Offer box on the client record'], ['24-crm-offer-log-sent.png', 'Automation Logs: one row per coach, Sent or Skipped']],
+    status:{ t:'Pairing Request Sent', c:'s7c', note:'set as soon as an offer email goes out' },
+    body:'Julia reads the suggestions and picks one or more coaches in <b>Offered Coaches</b> on the contact. She can pick any coach, not only the suggested ones. Then she ticks <b>Send Offer</b> and saves. A rule runs, <b>each picked coach gets an email</b> (shown above) with a link to accept or decline, and the client&rsquo;s status moves to <b>Pairing Request Sent</b>. If every address is a placeholder and nothing is actually emailed, the status stays Pairing Suggested. The email carries the case ID only, <b>no client details</b>. Coaches with a placeholder or missing email address are <b>skipped</b>, and every result is logged on the contact under <b>Automation Logs</b> (Offer, Email, Sent or Skipped). A coach who was already emailed is not emailed again; to send again, untick and tick the box.',
+    shots:[['22-crm-offered-coaches.png', 'Offered Coaches and the Send Offer box on the client record'], ['24-crm-offer-log-sent.png', 'Automation Logs: one row per coach, Sent or Skipped'], ['27-crm-pairing-request-sent.png', 'The client record after the offer went out: Pairing Request Sent']],
     meta:[['Owner','Julia / assessor'],['Fields','Offered Coaches, Send Offer'],['Sent from','The person who ticked the box'],['Log','Automation Logs, one row per coach']] },
 
   { id:'accept', kind:'next', pending:true, x:6800, y:300, w:440, tag:'14 · Coach · CRM built, web page not built yet',
     title:'Coach accepts or declines',
-    status:{ t:'Client Paired', c:'planned', note:'set when a coach accepts' },
+    status:{ t:'Client Paired', c:'s8', note:'set when the first coach accepts' },
     body:'The link opens a page on the Uplift website that shows the <b>case ID</b>, asks the coach to type their email, and has <b>Accept</b> and <b>Decline</b> buttons. Nothing happens until a button is pressed. The page asks the CRM, which checks that the email belongs to one of the offered coaches. <b>The first coach to accept gets the client:</b> the CRM sets <b>Paired Coach</b>, adds one to that coach&rsquo;s caseload, moves the status to <b>Client Paired</b> and logs it. A coach who answers later is told the client is already matched. A decline is only logged.',
     shots:[['25-crm-accept-log.png', 'Automation Logs: Accepted, and a later accept logged as Too late'], ['26-crm-coach-after-accept.png', 'The coach after accepting: caseload up by one, client listed under Paired Clients']],
     meta:[['Built','CRM side, tested with test coaches: accept, late accept, decline, read-only check'],['Not built','The website page; a message to the client; an alert to Julia when a coach accepts or when everyone declines; re-offering if nobody answers']] },
