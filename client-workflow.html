@@ -333,12 +333,14 @@ const NODES = [
     title:'Julia shortlists coaches and sends the offer',
     status:{ t:'Pairing Suggested', c:'s7b', note:'does not change at this step' },
     body:'Julia reads the suggestions and picks one or more coaches in <b>Offered Coaches</b> on the contact. She can pick any coach, not only the suggested ones. Then she ticks <b>Send Offer</b> and saves. A rule runs and <b>each picked coach gets an email</b> (shown above) with a link to accept or decline. The email carries the case ID only, <b>no client details</b>. Coaches with a placeholder or missing email address are <b>skipped</b>, and every result is logged on the contact under <b>Automation Logs</b> (Offer, Email, Sent or Skipped). A coach who was already emailed is not emailed again; to send again, untick and tick the box.',
+    shots:[['22-crm-offered-coaches.png', 'Offered Coaches and the Send Offer box on the client record'], ['24-crm-offer-log-sent.png', 'Automation Logs: one row per coach, Sent or Skipped']],
     meta:[['Owner','Julia / assessor'],['Fields','Offered Coaches, Send Offer'],['Sent from','The person who ticked the box'],['Log','Automation Logs, one row per coach']] },
 
   { id:'accept', kind:'next', pending:true, x:6800, y:300, w:440, tag:'14 · Coach · CRM built, web page not built yet',
     title:'Coach accepts or declines',
     status:{ t:'Client Paired', c:'planned', note:'set when a coach accepts' },
     body:'The link opens a page on the Uplift website that shows the <b>case ID</b>, asks the coach to type their email, and has <b>Accept</b> and <b>Decline</b> buttons. Nothing happens until a button is pressed. The page asks the CRM, which checks that the email belongs to one of the offered coaches. <b>The first coach to accept gets the client:</b> the CRM sets <b>Paired Coach</b>, adds one to that coach&rsquo;s caseload, moves the status to <b>Client Paired</b> and logs it. A coach who answers later is told the client is already matched. A decline is only logged.',
+    shots:[['25-crm-accept-log.png', 'Automation Logs: Accepted, and a later accept logged as Too late'], ['26-crm-coach-after-accept.png', 'The coach after accepting: caseload up by one, client listed under Paired Clients']],
     meta:[['Built','CRM side, tested with test coaches: accept, late accept, decline, read-only check'],['Not built','The website page; a message to the client; an alert to Julia when a coach accepts or when everyone declines; re-offering if nobody answers']] },
 
   { id:'coach', kind:'crm', x:7360, y:300, w:400, tag:'15 · Zoho CRM',
@@ -369,7 +371,8 @@ const NODES = [
 
   { id:'offermsg', kind:'msg', x:6280, bottom:220, w:440, tag:'Email · when the offer is sent',
     title:'Email to each offered coach',
-    body:'<b>Subject:</b> New client available: UPW-123<br>Hi (coach name), a new client (UPW-123) is available for pairing. Please open this link to accept or decline: (link to the accept page).<br><br>No client name or details are in the email. The link goes to the accept page in the next step, which is not built yet.' },
+    body:'<b>Subject:</b> New client available: UPW-123<br>Hi (coach name), a new client (UPW-123) is available for pairing. Please open this link to accept or decline: (link to the accept page).<br><br>No client name or details are in the email. The link goes to the accept page in the next step, which is not built yet.',
+    shots:[['23-email-offer-to-coach.png', 'The email as a test coach received it']] },
 
   /* ---- below the row: user stops partway, reminder after a delay ---- */
   { id:'back', kind:'drop', x:1520, below:['elig', 160], w:400, tag:'Case A · stops at Step 2',
