@@ -323,19 +323,25 @@ const NODES = [
     meta:[['Owner','Assessor (Julia)'],['Fields','Preferred Coach Gender, Age Group, Background, Industry, Language']] },
 
   { id:'sugg', kind:'crm', x:5760, y:300, w:440, tag:'12 · Zoho CRM · automatic',
-    title:'System suggests 3 coaches',
+    title:'System suggests up to 5 coaches',
     status:{ t:'Pairing Suggested', c:'s7b', note:'set automatically, within seconds' },
-    body:'Runs by itself the moment preferences are saved. <b>1.</b> It reads every coach in <b>Coach Profiles</b> and skips anyone who is <b>not active</b> or whose <b>caseload is already at their maximum</b>. <b>2.</b> Each remaining coach earns points for every match with what the client picked (table below). A coach is never ruled out for a mismatch; a weak match just ranks lower. <b>3.</b> Coaches are ranked by points, and a tie goes to the one with the <b>lower caseload</b>. <b>4.</b> The top three are written to <b>Coach Suggestions</b> (name, why, caseload) and the status becomes <b>Pairing Suggested</b>. If nobody has room, the field says <i>NO MATCH</i> and the status stays Ready to Pair. Nobody is paired yet: a person decides.',
+    body:'Runs by itself the moment preferences are saved. <b>1.</b> It reads every coach in <b>Coach Profiles</b> and skips anyone who is <b>not active</b> or whose <b>caseload is already at their maximum</b>. <b>2.</b> Each remaining coach earns points for every match with what the client picked (table below). A coach is never ruled out for a mismatch; a weak match just ranks lower. <b>3.</b> Coaches are ranked by points, and a tie goes to the one with the <b>lower caseload</b>. <b>4.</b> The top five are written to <b>Coach Suggestions</b> (name, why, caseload) and the status becomes <b>Pairing Suggested</b>. If nobody has room, the field says <i>NO MATCH</i> and the status stays Ready to Pair. Nobody is paired yet: a person decides.',
     meta:[['Gender','+3 if the coach&rsquo;s gender is one the client picked'],['Age group','+2 if the coach&rsquo;s age group is one the client picked'],['Background','+3 for each background they share'],['Industry','+2 for each industry they share'],['Language','+2 for each language they share'],['Empty pick','no points, so it counts as no preference'],['Tie','lower current caseload wins'],['Example','Female + Parenting + Spanish + 18-29: Elena 3 + 3 + 2 + 2 = <b>10</b>, Maya 3 + 3 = 6, Diane 3']],
     shots:[['20-crm-coach-suggestions.png', 'Preferences and the three suggestions on the client record'], ['21-crm-coach-profile.png', 'A coach profile: the details the matching reads']] },
 
-  { id:'pair', kind:'next', pending:true, x:6280, y:300, w:400, tag:'13 · Next · not built yet',
-    title:'A person approves one coach',
-    status:{ t:'Client Paired', c:'planned', note:'planned' },
-    body:'Julia or the intake team reads the three suggestions and approves one. That should set the client&rsquo;s <b>Coach</b>, move the status to <b>Client Paired</b>, add one to the coach&rsquo;s caseload, and send an email and SMS to the coach and the client (wording to be approved). An alert should go out if a client is still not paired after a set time. None of this exists yet; today the suggestions only sit on the record.',
-    meta:[['Owner','Assessor / intake (to confirm)']] },
+  { id:'offer', kind:'crm', x:6280, y:300, w:440, tag:'13 · Zoho CRM · built',
+    title:'Julia shortlists coaches and sends the offer',
+    status:{ t:'Pairing Suggested', c:'s7b', note:'does not change at this step' },
+    body:'Julia reads the suggestions and picks one or more coaches in <b>Offered Coaches</b> on the contact. She can pick any coach, not only the suggested ones. Then she ticks <b>Send Offer</b> and saves. A rule runs and <b>each picked coach gets an email</b> (shown above) with a link to accept or decline. The email carries the case ID only, <b>no client details</b>. Coaches with a placeholder or missing email address are <b>skipped</b>, and every result is logged on the contact under <b>Automation Logs</b> (Offer, Email, Sent or Skipped). A coach who was already emailed is not emailed again; to send again, untick and tick the box.',
+    meta:[['Owner','Julia / assessor'],['Fields','Offered Coaches, Send Offer'],['Sent from','The person who ticked the box'],['Log','Automation Logs, one row per coach']] },
 
-  { id:'coach', kind:'crm', x:6800, y:300, w:400, tag:'14 · Zoho CRM',
+  { id:'accept', kind:'next', pending:true, x:6800, y:300, w:440, tag:'14 · Coach · CRM built, web page not built yet',
+    title:'Coach accepts or declines',
+    status:{ t:'Client Paired', c:'planned', note:'set when a coach accepts' },
+    body:'The link opens a page on the Uplift website that shows the <b>case ID</b>, asks the coach to type their email, and has <b>Accept</b> and <b>Decline</b> buttons. Nothing happens until a button is pressed. The page asks the CRM, which checks that the email belongs to one of the offered coaches. <b>The first coach to accept gets the client:</b> the CRM sets <b>Paired Coach</b>, adds one to that coach&rsquo;s caseload, moves the status to <b>Client Paired</b> and logs it. A coach who answers later is told the client is already matched. A decline is only logged.',
+    meta:[['Built','CRM side, tested with test coaches: accept, late accept, decline, read-only check'],['Not built','The website page; a message to the client; an alert to Julia when a coach accepts or when everyone declines; re-offering if nobody answers']] },
+
+  { id:'coach', kind:'crm', x:7360, y:300, w:400, tag:'15 · Zoho CRM',
     title:'Coaching starts',
     status:{ t:'Active Coaching', c:'s9', note:'set when the start date is filled' },
     body:'When coaching begins, the <b>Coaching Start Date</b> is filled on the contact and the status becomes <b>Active Coaching</b>. Later, this is where the client starts to count in the coach&rsquo;s caseload.',
@@ -360,6 +366,10 @@ const NODES = [
     title:'Enrollment complete',
     body:'The SMS says they are all set and the session is confirmed. The email attaches the <b>signed consent form as a PDF</b>.',
     shots:[['11-sms-consent.png', 'SMS'], ['12-email-signed-consent.png', 'Email with signed PDF']] },
+
+  { id:'offermsg', kind:'msg', x:6280, bottom:220, w:440, tag:'Email · when the offer is sent',
+    title:'Email to each offered coach',
+    body:'<b>Subject:</b> New client available: UPW-123<br>Hi (coach name), a new client (UPW-123) is available for pairing. Please open this link to accept or decline: (link to the accept page).<br><br>No client name or details are in the email. The link goes to the accept page in the next step, which is not built yet.' },
 
   /* ---- below the row: user stops partway, reminder after a delay ---- */
   { id:'back', kind:'drop', x:1520, below:['elig', 160], w:400, tag:'Case A · stops at Step 2',
@@ -399,13 +409,15 @@ const EDGES = [
   { from:'note',   fs:'r', to:'adone',   ts:'l', label:'note signed' },
   { from:'adone',  fs:'r', to:'prefs',   ts:'l', label:'preferences' },
   { from:'prefs',  fs:'r', to:'sugg',    ts:'l', label:'preferences saved' },
-  { from:'sugg',   fs:'r', to:'pair',    ts:'l', label:'person approves', dashed:true },
-  { from:'pair',   fs:'r', to:'coach',   ts:'l', label:'coach starts', dashed:true },
+  { from:'sugg',   fs:'r', to:'offer',   ts:'l', label:'Julia picks coaches' },
+  { from:'offer',  fs:'r', to:'accept',  ts:'l', label:'coach opens the link', dashed:true },
+  { from:'accept', fs:'r', to:'coach',   ts:'l', label:'coach starts', dashed:true },
 
   { from:'app',    fs:'t', to:'crm',     ts:'b', dashed:true },
   { from:'app',    fs:'t', to:'sms',     ts:'b', dashed:true },
   { from:'book',   fs:'t', to:'bookmsg', ts:'b', dashed:true },
   { from:'consent',fs:'t', to:'donemsg', ts:'b', dashed:true },
+  { from:'offer',  fs:'t', to:'offermsg', ts:'b', dashed:true },
 
   { from:'elig',   fs:'b', to:'back',    ts:'t', label:'backs out', dashed:true, color:'red' },
   { from:'back',   fs:'b', to:'follow',  ts:'t', label:'after 15 min' },
