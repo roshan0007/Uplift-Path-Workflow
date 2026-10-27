@@ -227,8 +227,14 @@
  * Coordinates are canvas pixels; `s` is the side an arrow leaves or enters
  * (l r t b). Any card can be folded down to its title with the ▾ button.
  * `status:{t,c,note}` puts the CRM Journey Status pill on a card (c = s1..s9, s7b, s7c
- * or 'planned'); the names match the CRM picklist exactly.
+ * or 'planned'); the names match the CRM picklist exactly. The number shown before
+ * the name comes from STATUS_NO below and is a page label only, not part of the CRM value.
  */
+const STATUS_NO = {
+  'Application Submitted':1, 'Eligibility Completed':2, 'Appointment Booked':3, 'Consent Signed':4,
+  'Converted to Patient':5, 'Assessment Done':6, 'Ready to Pair':7, 'Pairing Suggested':8,
+  'Pairing Request Sent':9, 'Client Paired':10, 'Active Coaching':11
+};
 const IMG = 'assets/user-flow/';
 const TIMER = `<div class="timer">
   <div class="tbox"><div class="v">15 min</div><div class="l">Live</div></div>
@@ -445,7 +451,7 @@ for (const n of NODES) {
     `<div class="tagrow"><span class="tag">${n.tag}</span>` +
     `<button class="tog" type="button" aria-expanded="true" aria-label="Fold card"><svg><use href="#chev"/></svg></button></div>` +
     `<h2 class="title">${n.title}</h2>` +
-    (n.status ? `<div class="status"><span class="sk">CRM status</span><span class="pill ${n.status.c}">${n.status.t}</span>${n.status.note ? `<span class="sn">${n.status.note}</span>` : ''}</div>` : '') +
+    (n.status ? `<div class="status"><span class="sk">CRM status</span><span class="pill ${n.status.c}">${STATUS_NO[n.status.t] ? STATUS_NO[n.status.t] + '. ' : ''}${n.status.t}</span>${n.status.note ? `<span class="sn">${n.status.note}</span>` : ''}</div>` : '') +
     `<div class="content"><p class="body">${n.body}</p>` +
     (n.shots || []).map(([src, cap]) =>
       `<figure class="shot"><img src="${IMG + src}" alt="${cap || n.title}" draggable="false">${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`).join('') +
