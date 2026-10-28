@@ -348,7 +348,7 @@ const NODES = [
     status:{ t:'Client Paired', c:'s8', note:'set when the first coach accepts' },
     body:'The link opens a page on the Uplift website that shows the <b>case ID</b>, asks the coach to type their email, and has <b>Accept</b> and <b>Decline</b> buttons. Nothing happens until a button is pressed. The page asks the CRM, which checks that the email belongs to one of the offered coaches. <b>The first coach to accept gets the client:</b> the CRM sets <b>Paired Coach</b>, adds one to that coach&rsquo;s caseload, moves the status to <b>Client Paired</b> and logs it. A coach who answers later is told the client is already matched. A decline is only logged.',
     shots:[['25-crm-accept-log.png', 'Automation Logs: Accepted, and a later accept logged as Too late'], ['26-crm-coach-after-accept.png', 'The coach after accepting: caseload up by one, client listed under Paired Clients']],
-    meta:[['Built','CRM side, tested with test coaches: accept, late accept, decline, read-only check'],['Not built','The website page; a message to the client; an alert to Julia when a coach accepts or when everyone declines; re-offering if nobody answers']] },
+    meta:[['Built','CRM side, tested with test coaches: accept, late accept, decline, read-only check; an email to info@ when a client is paired'],['Not built','The website page; a message to the client; an alert to Julia when a coach accepts or when everyone declines; re-offering if nobody answers']] },
 
   { id:'coach', kind:'crm', x:7360, y:300, w:400, tag:'15 · Zoho CRM',
     title:'Coaching starts',
@@ -380,6 +380,11 @@ const NODES = [
     title:'Email to each offered coach',
     body:'<b>Subject:</b> New client available: UPW-123<br>Hi (coach name), a new client (UPW-123) is available for pairing. Please open this link to accept or decline: (link to the accept page).<br><br>No client name or details are in the email. The link goes to the accept page in the next step, which is not built yet.',
     shots:[['23-email-offer-to-coach.png', 'The email as a test coach received it']] },
+
+  { id:'pairedmsg', kind:'msg', x:6800, bottom:220, w:440, tag:'Email to info@ · when a client is paired',
+    title:'Email to info@ when a client is paired',
+    body:'<b>Subject:</b> Client paired: UPW-123 with (coach name)<br>Sent to the Uplift <b>info@</b> mailbox every time a client is paired, whether a coach accepts on the website or the team sets <b>Paired Coach</b> by hand. It carries the <b>case ID</b>, the <b>coach&rsquo;s name</b> and a link to the client record in the CRM. No client name or contact details are in the email. Each send is logged on the contact under <b>Automation Logs</b> (Pairing, Email).',
+    shots:[['28-email-info-client-paired.png', 'The email as info@ received it (CRM link hidden)']] },
 
   /* ---- below the row: user stops partway, reminder after a delay ---- */
   { id:'back', kind:'drop', x:1520, below:['elig', 160], w:400, tag:'Case A · stops at Step 2',
@@ -428,6 +433,7 @@ const EDGES = [
   { from:'book',   fs:'t', to:'bookmsg', ts:'b', dashed:true },
   { from:'consent',fs:'t', to:'donemsg', ts:'b', dashed:true },
   { from:'offer',  fs:'t', to:'offermsg', ts:'b', dashed:true },
+  { from:'accept', fs:'t', to:'pairedmsg', ts:'b', dashed:true },
 
   { from:'elig',   fs:'b', to:'back',    ts:'t', label:'backs out', dashed:true, color:'red' },
   { from:'back',   fs:'b', to:'follow',  ts:'t', label:'after 15 min' },
