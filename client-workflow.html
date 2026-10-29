@@ -29,6 +29,7 @@
     --drop-bg:#351618;   --drop-line:#78302f;   --drop-accent:#ff948f;
     --next-bg:#12301f;   --next-line:#21593c;   --next-accent:#74dfa5;
     --charm-bg:#0f2f33;  --charm-line:#1f5d63;  --charm-accent:#6fd6d6;
+    --role-bg:#1f1a38;   --role-line:#42376e;   --role-accent:#b9a2ff;
 
     --mono:'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
   }
@@ -62,8 +63,8 @@
   }
 
   /* section frame, as Heptabase groups a flow */
-  #frame{ position:absolute; border:1.5px solid #3b3b42; border-radius:14px; background:rgba(255,255,255,.012); pointer-events:none; }
-  #frame-chip{
+  #frame, #frame2{ position:absolute; border:1.5px solid #3b3b42; border-radius:14px; background:rgba(255,255,255,.012); pointer-events:none; }
+  #frame-chip, #frame2-chip{
     position:absolute; left:-1px; top:-34px; background:#6e6e76; color:#fff;
     font-weight:600; font-size:15px; padding:5px 14px; border-radius:8px; white-space:nowrap;
   }
@@ -85,6 +86,19 @@
   .k-drop {--n-bg:var(--drop-bg); --n-line:var(--drop-line); --n-accent:var(--drop-accent);}
   .k-next {--n-bg:var(--next-bg); --n-line:var(--next-line); --n-accent:var(--next-accent);}
   .k-charm{--n-bg:var(--charm-bg);--n-line:var(--charm-line);--n-accent:var(--charm-accent);}
+  .k-role {--n-bg:var(--role-bg); --n-line:var(--role-line); --n-accent:var(--role-accent);}
+
+  /* "Who uses this journey" lane: sections, lists and the how-sure-are-we tags */
+  .rsec{ margin:14px 0 6px; font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .rlist{ margin:0; padding-left:17px; font-size:12.5px; line-height:1.55; color:var(--text-soft); }
+  .rlist li + li{ margin-top:5px; }
+  .rlist b{ color:var(--text); font-weight:600; }
+  .tg{ display:inline-block; margin-left:5px; padding:1px 6px; border-radius:4px; vertical-align:1px; white-space:nowrap;
+    font-family:var(--mono); font-size:9.5px; font-weight:500; letter-spacing:.04em; text-transform:uppercase; color:#0b0f14; }
+  .tg.b{ background:#5fd08a; }
+  .tg.t{ background:#ecca5f; }
+  .tg.n{ background:#ff948f; }
+  .tg.c{ background:#b9c4d6; }
 
   /* CRM "Journey Status" shown on a card: same stage names and colours as the CRM */
   .status{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin:0 0 10px; }
@@ -203,12 +217,14 @@
   <div class="lrow"><span class="sw" style="background:var(--msg-bg);border-color:var(--msg-line)"></span>SMS / email</div>
   <div class="lrow"><span class="sw" style="background:var(--wait-bg);border-color:var(--wait-line)"></span>Timer</div>
   <div class="lrow"><span class="sw" style="background:var(--drop-bg);border-color:var(--drop-line)"></span>Drop-off</div>
+  <div class="lrow"><span class="sw" style="background:var(--role-bg);border-color:var(--role-line)"></span>Who uses it</div>
 </div>
 
 <div id="hint" class="chrome">Drag to pan · Ctrl or ⌘ + scroll to zoom · ▾ on a card folds it · click a card to trace its arrows</div>
 
 <div id="viewport">
   <div id="world">
+    <div id="frame2"><div id="frame2-chip">Who uses this journey · what each role gets and what is missing</div></div>
     <div id="frame"><div id="frame-chip">Peer Coaching · sign-up (Steps 1–4) → Charm → coaching</div></div>
     <svg id="edges" aria-hidden="true">
       <defs>
@@ -240,6 +256,37 @@ const TIMER = `<div class="timer">
   <div class="tbox"><div class="v">15 min</div><div class="l">Live</div></div>
   <div class="tbox"><div class="v">2 min</div><div class="l">Test</div></div>
 </div>`;
+
+/* How sure we are, shown after each item in the "Who uses this journey" lane. */
+const TG = {
+  b:'<span class="tg b">Built</span>',
+  t:'<span class="tg t">Not tested</span>',
+  n:'<span class="tg n">Not built</span>',
+  c:'<span class="tg c">Not checked</span>',
+  o:'<span class="tg n">Open bug</span>',
+};
+const list = (items) => `<ul class="rlist">${items.map(([text, tg]) => `<li>${text}${tg ? TG[tg] : ''}</li>`).join('')}</ul>`;
+
+/* One "Who" line on each step card, so a reader can go from a step to the roles around it. */
+const WHO = {
+  search:'Client',
+  mkt:'Client',
+  ref:'Client',
+  page:'Client',
+  app:'Client (gets a welcome SMS + email)',
+  elig:'Client. Intake is not told if they stop here',
+  book:'Client; assessor (round robin); intake if booking by phone',
+  consent:'Client',
+  done:'Client',
+  conv:'Intake team',
+  note:'Clinician / assessor',
+  adone:'Clinician / assessor',
+  prefs:'Clinician / assessor',
+  sugg:'Clinician / assessor and managers read the list',
+  offer:'Assessor sends; the coaches are told',
+  accept:'Coach acts; info@ is told; the client is not told yet',
+  coach:'Coach. Nobody else sees it yet',
+};
 
 const NODES = [
   /* ---- main row: the path a client walks ---- */
@@ -408,6 +455,128 @@ const NODES = [
     title:'Step 2 reminder',
     body:'Sent if no time is booked when the timer runs out. Marks Steps 1 and 2 complete and asks them to <b>book the assessment</b>, plus send insurance verification or a photo of their card. Returning clients can reply with their mentor&rsquo;s name to keep the same one.',
     shots:[['15-sms-step2.png', 'SMS'], ['14-email-step2.png', 'Email']] },
+
+  /* ---- lane under the whole board: every role, what it gets, what is missing ---- */
+  { id:'who', kind:'role', lane:true, x:0, w:400, tag:'Who uses this journey',
+    title:'Every role, and what is missing for each',
+    body:'Each card lists the steps a role touches (numbers match the cards above), what it gets today, and what is still missing. The tag after each line says how sure we are.',
+    extra:`<div class="rsec">Tags</div>${list([
+      ['Works and was tested', 'b'],
+      ['Exists, never run end to end', 't'],
+      ['Nothing exists yet', 'n'],
+      ['We do not know yet', 'c'],
+    ])}
+    <div class="rsec">Roles</div>
+    <p class="body">Client · Intake team · Clinician / assessor · Coach · Manager · Leadership · feedback across all of them.</p>` },
+
+  { id:'r-client', kind:'role', lane:true, x:440, w:420, tag:'Role · Steps 01–07',
+    title:'Client',
+    body:'The person signing up. They are active until step 07; after that they should still hear from the system.',
+    extra:`<div class="rsec">Gets today</div>${list([
+      ['Welcome SMS + email as soon as step 1 is sent', 'b'],
+      ['Reminder if they stop at step 2 or 3', 'b'],
+      ['Late step 3 reminder after the eligibility step', 't'],
+      ['Booked SMS + email with Join, Reschedule and Cancel', 'b'],
+      ['Enrollment complete, with the signed consent PDF', 'b'],
+    ])}
+    <div class="rsec">Missing</div>${list([
+      ['Told when a coach is paired, and who it is', 'n'],
+      ['First-session details, booking link and a reminder', 'n'],
+      ['A feedback request, including when the coach never makes contact', 'n'],
+      ['A rebook message after a no-show', 'n'],
+      ['What reschedule or cancel does to the status', 't'],
+      ['A way to ask for a different coach', 'n'],
+    ])}` },
+
+  { id:'r-intake', kind:'role', lane:true, x:900, w:420, tag:'Role · Steps 04–08',
+    title:'Intake team',
+    body:'Follows up leads who stall, books by phone when a client calls, and converts the client to a patient.',
+    extra:`<div class="rsec">Gets today</div>${list([
+      ['Convert to Patient button on the contact', 'b'],
+      ['Nothing automatic otherwise: no alert when a lead stalls', ''],
+    ])}
+    <div class="rsec">Missing</div>${list([
+      ['A list of stalled leads and no-shows to call back', 'n'],
+      ['A closed status after several unanswered attempts', 'n'],
+      ['One-click resend of a skipped or failed message', 'n'],
+      ['Booking by phone: do the status and messages still fire?', 't'],
+      ['Insurance check. LifeBridge&rsquo;s top cause of cancellations is an insurer change or invalid plan; do we validate the plan and ID?', 'c'],
+    ])}` },
+
+  { id:'r-assessor', kind:'role', lane:true, x:1360, w:420, tag:'Role · Steps 05, 09–13',
+    title:'Clinician / assessor',
+    body:'Takes the assessment, records it, notes what coach the client wants, and sends the offer.',
+    extra:`<div class="rsec">Gets today</div>${list([
+      ['Booked through the Zoho Bookings round robin', 'b'],
+      ['Writes the note in Charm; fills Assessment Done On', 'b'],
+      ['Fills the five coach preferences; shortlists coaches and sends the offer', 'b'],
+    ])}
+    <div class="rsec">Missing</div>${list([
+      ['A setup guide for a new clinician: Bookings profile and joining the round robin. Link goes at step 05 once written', 'n'],
+      ['An instant alert when a slot is booked at short notice. There is no minimum notice (LifeBridge: 20 hours)', 'n'],
+      ['A daily or weekly cap per assessor', 'c'],
+      ['Anything that reads the Charm note, so Assessment Done is a manual date', 'n'],
+      ['Preferences captured from a form instead of typed by hand', 'n'],
+    ])}` },
+
+  { id:'r-coach', kind:'role', lane:true, x:1820, w:420, tag:'Role · Steps 13–15',
+    title:'Coach (QBHS)',
+    body:'Gets the offer, accepts or declines on the website, then starts coaching the client.',
+    extra:`<div class="rsec">Gets today</div>${list([
+      ['Offer email with the case ID only', 'b'],
+      ['Accept / Decline page; caseload goes up by one on accept', 'b'],
+    ])}
+    <div class="rsec">Missing</div>${list([
+      ['The accept page showed an error after a successful accept (reported 28 Oct)', 'o'],
+      ['A one-click capacity and &ldquo;away until&rdquo; update by Cliq or email, with no CRM login', 'n'],
+      ['Client details and a first-session link after accepting', 'n'],
+      ['A nudge if they have not contacted the client within a set number of days', 'n'],
+      ['Their own caseload and ratings view', 'n'],
+      ['Profile details filled from Zoho People', 'n'],
+    ])}` },
+
+  { id:'r-manager', kind:'role', lane:true, x:2280, w:420, tag:'Role · Steps 12–15',
+    title:'Manager',
+    body:'The clinical and operations leads who oversee pairing and workload.',
+    extra:`<div class="rsec">Gets today</div>${list([
+      ['An email to info@ whenever a client is paired', 'b'],
+    ])}
+    <div class="rsec">Missing</div>${list([
+      ['The same notice to the clinical and operations leads, not only info@', 'n'],
+      ['An alert if every offered coach declines or nobody answers in a set time, then a re-offer', 'n'],
+      ['A list of clients in Pairing Request Sent who have not been accepted', 'n'],
+      ['An alert when a client sits too long in one status', 'n'],
+      ['Resend for failed messages', 'n'],
+    ])}` },
+
+  { id:'r-lead', kind:'role', lane:true, x:2740, w:420, tag:'Role · All steps, summary',
+    title:'Leadership',
+    body:'Wants to see the whole journey at a glance: which coaches perform, which clients are happy, and whether anyone has been forgotten.',
+    extra:`<div class="rsec">Gets today</div>${list([
+      ['Status history and Automation Logs on each contact, one contact at a time', 'b'],
+      ['No dashboard or summary', ''],
+    ])}
+    <div class="rsec">Missing</div>${list([
+      ['Funnel and drop-off by status', 'n'],
+      ['A coach league table: sessions, ratings, top and least performer', 'n'],
+      ['A signal that a paired client is actually being coached, and is happy', 'n'],
+      ['Week-on-week and month-on-month views, live (Zoho Analytics, later)', 'n'],
+    ])}
+    <div class="rsec">For comparison</div>
+    <p class="body">LifeBridge has a dashboard of zero-hour cells and a daily gap report. It has no ratings and no alerts.</p>` },
+
+  { id:'r-feedback', kind:'role', pending:true, lane:true, x:3200, w:420, tag:'All roles · Planned',
+    title:'Feedback, by stage',
+    body:'Feedback cannot depend on the coach session happening, so it has two sources and a catch-all.',
+    extra:`${list([
+      ['Intake and pairing stages in the CRM: a Zoho survey. Check it is covered by Zoho&rsquo;s BAA before client data goes in', 'n'],
+      ['After the assessment and after each session: the Charm patient survey, sent from Charm. The return to the CRM is not verified', 'n'],
+      ['A client paired with a coach but never in touch: a next-day contact survey with one reminder', 'n'],
+    ])}` },
+
+  { id:'r-work', kind:'role', lane:true, x:3660, w:360, tag:'Not on this board',
+    title:'QBHS hiring and onboarding',
+    body:'A different journey: coaches are hired in Zoho Recruit, onboarded in Zoho People and trained in Zoho Learn. It is documented separately and not repeated here.' },
 ];
 
 const EDGES = [
@@ -443,11 +612,12 @@ const EDGES = [
 
 /* ---------------- build ---------------- */
 const $ = (s) => document.querySelector(s);
-const viewport = $('#viewport'), world = $('#world'), svg = $('#edges'), frame = $('#frame');
+const viewport = $('#viewport'), world = $('#world'), svg = $('#edges'), frame = $('#frame'), frame2 = $('#frame2');
 const NS = 'http://www.w3.org/2000/svg';
 const els = {};
 
 for (const n of NODES) {
+  const meta = WHO[n.id] ? [['Who', WHO[n.id]], ...(n.meta || [])] : n.meta;
   const d = document.createElement('article');
   d.className = `node k-${n.kind}${n.pending ? ' pending' : ''}`;
   d.dataset.id = n.id;
@@ -462,7 +632,7 @@ for (const n of NODES) {
     (n.shots || []).map(([src, cap]) =>
       `<figure class="shot"><img src="${IMG + src}" alt="${cap || n.title}" draggable="false">${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`).join('') +
     (n.extra || '') +
-    (n.meta ? `<div class="meta">${n.meta.map(([k, v]) => `<div class="mrow"><span class="mk">${k}</span><span>${v}</span></div>`).join('')}</div>` : '') +
+    (meta ? `<div class="meta">${meta.map(([k, v]) => `<div class="mrow"><span class="mk">${k}</span><span>${v}</span></div>`).join('')}</div>` : '') +
     `</div>`;
   world.appendChild(d);
   els[n.id] = d;
@@ -481,6 +651,10 @@ function place() {
     const [ref, gap] = n.below, r = els[ref];
     els[n.id].style.top = (r.offsetTop + r.offsetHeight + gap) + 'px';
   }
+  // The "Who uses this journey" lane sits under every other card.
+  let low = 0;
+  for (const n of NODES) if (!n.lane) low = Math.max(low, els[n.id].offsetTop + els[n.id].offsetHeight);
+  for (const n of NODES) if (n.lane) els[n.id].style.top = (low + 260) + 'px';
 }
 
 const rect = (id) => { const e = els[id]; return { x:e.offsetLeft, y:e.offsetTop, w:e.offsetWidth, h:e.offsetHeight }; };
@@ -519,12 +693,19 @@ function drawEdges() {
 }
 
 let bounds = { x:0, y:0, w:1, h:1 };
-function layoutFrame() {
+// Frame the cards of one group (the journey, or the lane) and return its box.
+function frameOf(el, group) {
   let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-  for (const n of NODES) { const r = rect(n.id); x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h); }
+  for (const n of group) { const r = rect(n.id); x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h); }
   const pad = 70;
-  bounds = { x:x0 - pad, y:y0 - pad, w:x1 - x0 + pad*2, h:y1 - y0 + pad*2 };
-  Object.assign(frame.style, { left:bounds.x + 'px', top:bounds.y + 'px', width:bounds.w + 'px', height:bounds.h + 'px' });
+  const box = { x:x0 - pad, y:y0 - pad, w:x1 - x0 + pad*2, h:y1 - y0 + pad*2 };
+  Object.assign(el.style, { left:box.x + 'px', top:box.y + 'px', width:box.w + 'px', height:box.h + 'px' });
+  return box;
+}
+function layoutFrame() {
+  const a = frameOf(frame, NODES.filter((n) => !n.lane)), b = frameOf(frame2, NODES.filter((n) => n.lane));
+  const x0 = Math.min(a.x, b.x), y0 = Math.min(a.y, b.y), x1 = Math.max(a.x + a.w, b.x + b.w), y1 = Math.max(a.y + a.h, b.y + b.h);
+  bounds = { x:x0, y:y0, w:x1 - x0, h:y1 - y0 };
 }
 function relayout() { place(); layoutFrame(); drawEdges(); }
 
