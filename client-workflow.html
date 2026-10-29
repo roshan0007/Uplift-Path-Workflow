@@ -472,9 +472,14 @@ const NODES = [
     title:'Charm and the CRM stay in sync',
     body:'What Charm sends back, such as the signed assessment note and sessions completed, updates the CRM, so nothing is typed twice and the status always matches the chart.' },
 
-  { id:'g-notify', kind:'role', x:6800, above:['pairedmsg', 60], w:440, tag:'Manager · Step 14',
-    title:'Managers are told when a coach accepts',
-    body:'The clinical and operations leads get the same notice as info@ the moment a coach accepts. If every offered coach declines, or nobody answers in time, they are alerted and the client is offered to other coaches. A list shows every offer still waiting for an answer.' },
+  { id:'devmsg', kind:'msg', x:6800, above:['pairedmsg', 60], w:440, tag:'Email to Devyani · when a client is paired',
+    title:'Email to Devyani when a client is paired',
+    body:'<b>Subject:</b> Client paired: UPW-123 with (coach name)<br>Devyani receives the same email as the info@ mailbox, every time a client is paired, whether a coach accepts on the website or the team sets <b>Paired Coach</b> by hand. It carries the <b>case ID</b>, the <b>coach&rsquo;s name</b> and a link to the client record in the CRM. No client name or contact details are in the email.',
+    shots:[['28-email-info-client-paired.png', 'The same email, as info@ receives it (CRM link hidden)']] },
+
+  { id:'g-notify', kind:'role', x:6800, above:['devmsg', 60], w:440, tag:'Manager · Step 14',
+    title:'Alerts when an offer is not answered',
+    body:'If every offered coach declines, or nobody answers in time, the clinical and operations leads are alerted and the client is offered to other coaches. A list shows every offer still waiting for an answer.' },
 
   { id:'g-after', kind:'role', x:7360, bottom:220, w:400, tag:'Client + Coach · After step 14',
     title:'After pairing, both sides are told',
@@ -649,7 +654,7 @@ const EDGES = [
   { from:'book',   fs:'t', to:'g-guide',  ts:'b', dashed:true },
   { from:'follow', fs:'b', to:'g-intake', ts:'t', dashed:true },
   { from:'note',   fs:'b', to:'g-sync',   ts:'t', dashed:true },
-  { from:'accept', fs:'t', to:'g-notify', ts:'b', dashed:true },
+  { from:'accept', fs:'t', to:'devmsg',   ts:'b', dashed:true },
   { from:'coach',  fs:'t', to:'g-after',  ts:'b', dashed:true },
   { from:'coach',  fs:'r', to:'g-lead',   ts:'l', label:'summary', dashed:true },
 ];
