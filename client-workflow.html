@@ -95,16 +95,10 @@
   .rlist b{ color:var(--text); font-weight:600; }
   .rsec ~ .body{ margin-top:12px; }
   .rlist.steps{ list-style:none; padding-left:0; }
-  .stp{ display:inline-block; min-width:26px; margin-right:6px; font-family:var(--mono); font-size:10.5px; font-weight:500; color:var(--role-accent); }
+  .rlist.steps li{ display:flex; gap:8px; }
+  .stp{ flex:0 0 18px; margin-top:1px; font-family:var(--mono); font-size:10.5px; font-weight:500; color:var(--role-accent); }
   .gd{ display:inline-block; margin:2px 6px 2px 0; padding:3px 9px; border-radius:6px; font-size:11.5px; line-height:1.4;
     border:1px solid var(--role-line); color:var(--focus); text-decoration:none; }
-  .gd.todo{ border-style:dashed; color:var(--muted); }
-  .tg{ display:inline-block; margin-left:5px; padding:1px 6px; border-radius:4px; vertical-align:1px; white-space:nowrap;
-    font-family:var(--mono); font-size:9.5px; font-weight:500; letter-spacing:.04em; text-transform:uppercase; color:#0b0f14; }
-  .tg.b{ background:#5fd08a; }
-  .tg.t{ background:#ecca5f; }
-  .tg.n{ background:#ff948f; }
-  .tg.c{ background:#b9c4d6; }
 
   /* CRM "Journey Status" shown on a card: same stage names and colours as the CRM */
   .status{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin:0 0 10px; }
@@ -223,8 +217,7 @@
   <div class="lrow"><span class="sw" style="background:var(--msg-bg);border-color:var(--msg-line)"></span>SMS / email</div>
   <div class="lrow"><span class="sw" style="background:var(--wait-bg);border-color:var(--wait-line)"></span>Timer</div>
   <div class="lrow"><span class="sw" style="background:var(--drop-bg);border-color:var(--drop-line)"></span>Drop-off</div>
-  <div class="lrow"><span class="sw" style="background:var(--role-bg);border-color:var(--role-line)"></span>A role&rsquo;s part of the journey</div>
-  <div class="lrow"><span class="sw" style="background:var(--role-bg);border-color:var(--role-accent);border-style:dashed"></span>Step still to build</div>
+  <div class="lrow"><span class="sw" style="background:var(--role-bg);border-color:var(--role-line)"></span>Roles</div>
 </div>
 
 <div id="hint" class="chrome">Drag to pan · Ctrl or ⌘ + scroll to zoom · ▾ on a card folds it · click a card to trace its arrows</div>
@@ -264,21 +257,13 @@ const TIMER = `<div class="timer">
   <div class="tbox"><div class="v">2 min</div><div class="l">Test</div></div>
 </div>`;
 
-/* How sure we are, shown after each item in the "Who uses this journey" lane. */
-const TG = {
-  b:'<span class="tg b">Built</span>',
-  t:'<span class="tg t">Not tested</span>',
-  n:'<span class="tg n">Not built</span>',
-  c:'<span class="tg c">Not checked</span>',
-  o:'<span class="tg n">Open bug</span>',
-};
-const list = (items) => `<ul class="rlist">${items.map(([text, tg]) => `<li>${text}${tg ? TG[tg] : ''}</li>`).join('')}</ul>`;
-/* A role's part of the journey: the step number, then what the role does there. */
-const steps = (items) => `<ul class="rlist steps">${items.map(([no, text]) => `<li><span class="stp">${no}</span>${text}</li>`).join('')}</ul>`;
-/* A guide link. Only real links are clickable; the rest say so instead of pointing nowhere. */
+/* "Who uses this journey" lane: plain lists, numbered steps and guide links. */
+const list = (items) => `<ul class="rlist">${items.map((text) => `<li>${text}</li>`).join('')}</ul>`;
+const steps = (items) => `<ol class="rlist steps">${items.map((text, i) => `<li><span class="stp">${i + 1}</span>${text}</li>`).join('')}</ol>`;
+/* A guide link. Pass the Drive / WorkDrive URL as href once the guide exists. */
 const guide = (label, href) => href
   ? `<a class="gd" href="${href}" target="_blank" rel="noopener">${label}</a>`
-  : `<span class="gd todo">${label} · to be written</span>`;
+  : `<span class="gd">${label}</span>`;
 
 /* One "Who" line on each step card, so a reader can go from a step to the roles around it. */
 const WHO = {
@@ -287,7 +272,7 @@ const WHO = {
   ref:'Client',
   page:'Client',
   app:'Client (gets a welcome SMS + email)',
-  elig:'Client. Intake is not told if they stop here',
+  elig:'Client; intake follows up if they stop here',
   book:'Client; assessor (round robin); intake if booking by phone',
   consent:'Client',
   done:'Client',
@@ -297,8 +282,8 @@ const WHO = {
   prefs:'Clinician / assessor',
   sugg:'Clinician / assessor and managers read the list',
   offer:'Assessor sends; the coaches are told',
-  accept:'Coach acts; info@ is told; the client is not told yet',
-  coach:'Coach. Nobody else sees it yet',
+  accept:'Coach acts; managers and info@ are told',
+  coach:'Coach; the client and managers are told',
 };
 
 const NODES = [
@@ -469,151 +454,163 @@ const NODES = [
     body:'Sent if no time is booked when the timer runs out. Marks Steps 1 and 2 complete and asks them to <b>book the assessment</b>, plus send insurance verification or a photo of their card. Returning clients can reply with their mentor&rsquo;s name to keep the same one.',
     shots:[['15-sms-step2.png', 'SMS'], ['14-email-step2.png', 'Email']] },
 
-  /* ---- steps still to build, added into the flow where a role needs them (dashed) ---- */
-  { id:'g-guide', kind:'role', pending:true, x:1560, bottom:220, w:400, tag:'To build · Clinician · at step 05',
+  /* ---- steps added into the flow where a role needs them ---- */
+  { id:'g-guide', kind:'role', x:1560, bottom:220, w:400, tag:'Clinician · Step 05',
     title:'Clinician Bookings setup guide',
-    body:'A new clinician has no guide for setting up their Zoho Bookings profile and joining the round robin. The guide lives in Drive and is linked here, not copied onto the page.',
+    body:'A new clinician gets a guide for setting up their Zoho Bookings profile and joining the round robin. The guide lives in Drive and is linked here, so everything stays on one page.',
     extra:`<div class="rsec">Guide</div>${guide('Clinician Bookings + round robin setup')}` },
 
-  { id:'g-alert', kind:'role', pending:true, x:1560, above:['g-guide', 60], w:400, tag:'To build · Clinician · at step 05',
+  { id:'g-alert', kind:'role', x:1560, above:['g-guide', 60], w:400, tag:'Clinician · Step 05',
     title:'Short-notice booking alert',
-    body:'There is no minimum notice, so a client can book a slot minutes ahead and the clinician finds out only when they look. LifeBridge keeps a 20-hour buffer. To decide: a minimum notice, and an instant SMS or Cliq message to the person who was booked.' },
+    body:'Bookings keeps a minimum notice, so a slot is never taken minutes ahead. The moment a client books with a clinician, the clinician gets an instant SMS or Cliq message.' },
 
-  { id:'g-intake', kind:'role', pending:true, x:1520, below:['follow', 120], w:400, tag:'To build · Intake · steps 04–05',
-    title:'Stalled leads and no-shows, with resend',
-    body:'A list of clients who stopped at step 2 or 3, or did not show, for intake to call back. A closed status after several unanswered attempts. A one-click resend of any message that was skipped or failed.' },
+  { id:'g-intake', kind:'role', x:1520, below:['follow', 120], w:400, tag:'Intake · Steps 04–05',
+    title:'Follow-up list, no-shows and resend',
+    body:'Intake gets a list of clients who stopped partway or missed a session, with who to call next. Any message that did not go out can be resent in one click, and a client who never answers is closed out after several attempts.' },
 
-  { id:'g-sync', kind:'role', pending:true, x:4200, below:['note', 120], w:400, tag:'To build · Assessor · step 09',
-    title:'Charm and CRM kept in sync',
-    body:'Nothing in the CRM reads the Charm note, so Assessment Done is a date typed by hand. To map: what Charm can send back (note signed, status, sessions done) and what should update the CRM.' },
+  { id:'g-sync', kind:'role', x:4200, below:['note', 120], w:400, tag:'Assessor · Step 09',
+    title:'Charm and the CRM stay in sync',
+    body:'What Charm sends back, such as the signed assessment note and sessions completed, updates the CRM, so nothing is typed twice and the status always matches the chart.' },
 
-  { id:'g-notify', kind:'role', pending:true, x:6800, above:['pairedmsg', 60], w:440, tag:'To build · Manager · step 14',
-    title:'Tell the managers when a coach accepts',
-    body:'The info@ email exists. To add: the same notice to the clinical and operations leads, an alert if every offered coach declines or nobody answers in a set time (then offer to others), and a list of offers not yet accepted.' },
+  { id:'g-notify', kind:'role', x:6800, above:['pairedmsg', 60], w:440, tag:'Manager · Step 14',
+    title:'Managers are told when a coach accepts',
+    body:'The clinical and operations leads get the same notice as info@ the moment a coach accepts. If every offered coach declines, or nobody answers in time, they are alerted and the client is offered to other coaches. A list shows every offer still waiting for an answer.' },
 
-  { id:'g-after', kind:'role', pending:true, x:7360, bottom:220, w:400, tag:'To build · Client + Coach · after step 14',
-    title:'After pairing: both sides are told',
-    body:'The client hears who their coach is. The coach gets the client&rsquo;s first-session details and a booking link. A reminder goes out before the first session, and a nudge goes to the coach if there has been no contact within a set number of days.' },
+  { id:'g-after', kind:'role', x:7360, bottom:220, w:400, tag:'Client + Coach · After step 14',
+    title:'After pairing, both sides are told',
+    body:'The client hears who their coach is. The coach receives the client&rsquo;s first-session details and a booking link. A reminder goes out before the first session, and the coach is nudged if there has been no contact within a few days.' },
 
-  { id:'g-capacity', kind:'role', pending:true, x:7360, above:['g-after', 60], w:400, tag:'To build · Coach · step 13',
+  { id:'g-capacity', kind:'role', x:7360, above:['g-after', 60], w:400, tag:'Coach · Step 13',
     title:'One-click capacity and availability',
-    body:'A Cliq message or email asks how many clients the coach can take this month and whether they are away. One click updates the coach profile, with no CRM login.' },
+    body:'A Cliq message or email asks each coach how many clients they can take this month and whether they are away. One click updates their profile, with no CRM login.' },
 
-  { id:'g-feedback', kind:'role', pending:true, x:7360, above:['g-capacity', 60], w:400, tag:'To build · All roles · after step 14',
+  { id:'g-feedback', kind:'role', x:7360, above:['g-capacity', 60], w:400, tag:'All roles · After step 14',
     title:'Feedback',
-    body:'Two sources and a catch-all. Intake and pairing stages in the CRM: a Zoho survey (check it is covered by the BAA first). After the assessment and after each session: the Charm patient survey. A paired client who never meets the coach: a next-day survey with one reminder.' },
+    body:'Feedback is collected at every stage, whether or not a coach session happens. Intake and pairing stages use a Zoho survey; after the assessment and after each session, the Charm patient survey. A client paired with a coach but never in touch gets a next-day survey with one reminder.' },
 
-  { id:'g-lead', kind:'role', pending:true, x:7900, y:300, w:400, tag:'To build · Leadership · summary',
+  { id:'g-lead', kind:'role', x:7900, y:300, w:400, tag:'Leadership · Summary',
     title:'Leadership view',
-    body:'Funnel and drop-off by status. A coach league table: sessions, ratings, top and least performer. A signal that a paired client is being coached and is happy. Week on week and month on month, live (Zoho Analytics, later).' },
+    body:'The funnel and drop-off by status, a coach league table (sessions, ratings, top and least performer), and a signal that each paired client is being coached and is happy. Week on week and month on month, live in Zoho Analytics.' },
 
   /* ---- lane under the whole board: each role's part of the journey ---- */
   { id:'who', kind:'role', lane:true, x:0, w:400, tag:'Who does what',
     title:'Each role&rsquo;s part of the journey',
-    body:'Find your role. Each card lists what that role does, in order, with the step numbers on the cards above, what it is told, and where its guides are. Dashed cards in the flow are steps still to build, marked with the role that needs them.',
-    extra:`<div class="rsec">Tags</div>${list([
-      ['Works and was tested', 'b'],
-      ['Exists, never run end to end', 't'],
-      ['Nothing exists yet', 'n'],
-    ])}
-    <div class="rsec">Roles</div>
-    <p class="body">Client · Intake team · Clinician / assessor · Coach · Manager · Leadership.</p>` },
+    body:'Find your role. Each card says what the role means, what it does in order, what it is told, and where its guides are.',
+    extra:`<div class="rsec">Roles</div>${list([
+      'Client',
+      'Intake team',
+      'Clinician / assessor',
+      'Coach',
+      'Manager',
+      'Leadership',
+    ])}` },
 
-  { id:'r-client', kind:'role', lane:true, x:440, w:420, tag:'Role · Steps 01–07',
+  { id:'r-client', kind:'role', lane:true, x:440, w:420, tag:'Role',
     title:'Client',
-    body:'The person signing up. They are active until step 07; after that they should still hear from the system.',
+    body:'The person who signs up for Uplift Coaching. They expect a simple sign-up, clear confirmation at every step, and a coach who fits them.',
     extra:`<div class="rsec">What you do</div>${steps([
-      ['01', 'Find Uplift Path on Google, an ad or a referral'],
-      ['03', 'Fill in the application'],
-      ['04', 'Check eligibility with the Case ID'],
-      ['05', 'Pick a session time'],
-      ['06', 'Sign the consent form'],
-      ['07', 'See the thank-you page'],
+      'Find Uplift Path on Google, an ad or a referral, and click Get Started',
+      'Fill in the application',
+      'Check eligibility with your Case ID',
+      'Pick a session time',
+      'Sign the consent form',
+      'Meet your assessor and say what kind of coach you want',
+      'Meet your coach',
     ])}
     <div class="rsec">What you are told</div>${list([
-      ['Welcome SMS + email when step 03 is sent', 'b'],
-      ['Reminder if you stop at step 04 or 05', 'b'],
-      ['Booked SMS + email with Join, Reschedule and Cancel', 'b'],
-      ['SMS + email with the signed consent PDF', 'b'],
-      ['Anything after sign-up: who your coach is, your first session, a feedback request', 'n'],
+      'A welcome SMS and email as soon as you apply',
+      'A reminder if you stop partway',
+      'Your session confirmation, with Join, Reschedule and Cancel buttons',
+      'Your signed consent form as a PDF',
+      'Who your coach is, and a reminder before your first session',
+      'A short feedback request after your first sessions',
     ])}
-    <p class="body">Still to build, as dashed cards above: after pairing, feedback.</p>` },
+    <div class="rsec">Guides</div>${guide('Getting started with Uplift')}` },
 
-  { id:'r-intake', kind:'role', lane:true, x:900, w:420, tag:'Role · Steps 04–08',
+  { id:'r-intake', kind:'role', lane:true, x:900, w:420, tag:'Role',
     title:'Intake team',
-    body:'Follows up leads who stall, books by phone when a client calls, and converts the client to a patient.',
+    body:'The people clients hear from first. They expect to know exactly who needs a call, and that no client slips away unnoticed.',
     extra:`<div class="rsec">What you do</div>${steps([
-      ['04', 'Follow up leads who stop at eligibility or booking (reminders already go out)'],
-      ['05', 'Book by phone when a client calls, in Zoho Bookings'],
-      ['08', 'Open the contact and click Convert to Patient; the patient appears in Charm'],
+      'Call and check in with every client who stops partway, and help them finish',
+      'Book the assessment by phone for clients who call in',
+      'Confirm eligibility and insurance details with the client',
+      'Convert the client to a patient in Charm once enrolled',
+      'Rebook clients who missed a session',
     ])}
     <div class="rsec">What you are told</div>${list([
-      ['Nothing automatic: intake works from the CRM', ''],
+      'A list of who needs a call, and how far each client got',
+      'An alert when a client misses a session, with a rebook message ready to send',
+      'A one-click resend for any message that did not go out',
     ])}
-    <div class="rsec">Guides</div>${guide('Following up and converting')}
-    <p class="body">Still to build: stalled leads, no-shows and resend. Booking by phone has not been tested end to end.</p>` },
+    <div class="rsec">Guides</div>${guide('Following up and converting')}` },
 
-  { id:'r-assessor', kind:'role', lane:true, x:1360, w:420, tag:'Role · Steps 05, 09–13',
+  { id:'r-assessor', kind:'role', lane:true, x:1360, w:420, tag:'Role',
     title:'Clinician / assessor',
-    body:'Takes the assessment, records it, notes what coach the client wants, and sends the offer.',
+    body:'The clinician who meets each new client, records the assessment and hands them to the right coach. They expect a calendar that only holds bookings they can keep, and everything in one place.',
     extra:`<div class="rsec">What you do</div>${steps([
-      ['05', 'Set up your Zoho Bookings profile and join the round robin'],
-      ['05', 'Get booked by clients through the round robin'],
-      ['09', 'Meet the client in Charm, write the assessment note and sign it'],
-      ['10', 'Fill Assessment Done On in the CRM'],
-      ['11', 'Pick the five coach preferences'],
-      ['12', 'Read the top-five coach suggestions'],
-      ['13', 'Pick coaches and tick Send Offer'],
+      'Set up your Zoho Bookings profile and join the round robin',
+      'Meet the booked client, then write and sign the assessment note in Charm',
+      'Mark the assessment done in the CRM',
+      'Record what kind of coach the client wants',
+      'Review the five suggested coaches',
+      'Pick the coaches and send the offer',
     ])}
     <div class="rsec">What you are told</div>${list([
-      ['A booking at short notice. You find out only when you look at the calendar', 'n'],
+      'An instant message the moment a client books with you',
+      'A reminder before each assessment',
+      'A notice when a coach accepts your client',
     ])}
-    <div class="rsec">Guides</div>${guide('Bookings profile + round robin')}${guide('Charm note and CRM steps')}
-    <p class="body">Still to build: the setup guide, a short-notice alert, Charm and CRM kept in sync.</p>` },
+    <div class="rsec">Guides</div>${guide('Bookings profile + round robin')}${guide('Charm note and CRM steps')}` },
 
-  { id:'r-coach', kind:'role', lane:true, x:1820, w:420, tag:'Role · Steps 13–15',
+  { id:'r-coach', kind:'role', lane:true, x:1820, w:420, tag:'Role',
     title:'Coach (QBHS)',
-    body:'Gets the offer, accepts or declines on the website, then starts coaching the client.',
+    body:'The Uplift Coach who supports the client day to day. They expect clients who fit them, a simple way to say yes or no, and control of their own capacity.',
     extra:`<div class="rsec">What you do</div>${steps([
-      ['13', 'Get the offer email (case ID only)'],
-      ['14', 'Open the link, type your email, press Accept or Decline'],
-      ['15', 'Start coaching; the Coaching Start Date is filled'],
+      'Keep your capacity and availability up to date with one click',
+      'Open the offer and accept or decline',
+      'Contact the client and hold the first session',
+      'Keep coaching; the client counts in your caseload',
     ])}
     <div class="rsec">What you are told</div>${list([
-      ['The offer email', 'b'],
-      ['Client details and a first-session link after accepting', 'n'],
-      ['The accept page showed an error after a successful accept (reported 28 Oct)', 'o'],
+      'The offer email, with the case ID only',
+      'The client&rsquo;s first-session details and a booking link once you accept',
+      'A monthly one-click message asking for your capacity and availability',
+      'A nudge if first contact has not happened within a few days',
     ])}
-    <div class="rsec">Guides</div>${guide('Accepting a client and updating your capacity')}
-    <p class="body">Still to build: after pairing, one-click capacity, feedback.</p>` },
+    <div class="rsec">Guides</div>${guide('Accepting a client and updating your capacity')}` },
 
-  { id:'r-manager', kind:'role', lane:true, x:2280, w:420, tag:'Role · Steps 12–15',
+  { id:'r-manager', kind:'role', lane:true, x:2280, w:420, tag:'Role',
     title:'Manager',
-    body:'The clinical and operations leads who oversee pairing and workload.',
+    body:'The clinical and operations leads who keep pairing and workload on track. They expect to know the moment a client is paired, and to be warned when one is stuck.',
     extra:`<div class="rsec">What you do</div>${steps([
-      ['12', 'See the coach suggestions on the contact'],
-      ['13', 'See who was offered the client, and the Automation Logs'],
-      ['14', 'Get an email at info@ when a client is paired'],
-      ['all', 'Read the Journey Status and its history on each contact'],
+      'Review coach suggestions and offers on each contact',
+      'Follow every client&rsquo;s status and history',
+      'Step in when an offer is not answered and offer the client to other coaches',
+      'Balance caseloads across coaches',
     ])}
     <div class="rsec">What you are told</div>${list([
-      ['An email to info@ whenever a client is paired', 'b'],
-      ['The same notice to the clinical and operations leads', 'n'],
+      'A notice the moment a coach accepts a client',
+      'An alert if every offered coach declines or nobody answers in time',
+      'A list of offers still waiting for an answer',
     ])}
-    <p class="body">Still to build: tell the managers when a coach accepts, with an alert if nobody does.</p>` },
+    <div class="rsec">Guides</div>${guide('Reading pairing and the activity log')}` },
 
-  { id:'r-lead', kind:'role', lane:true, x:2740, w:420, tag:'Role · All steps, summary',
+  { id:'r-lead', kind:'role', lane:true, x:2740, w:420, tag:'Role',
     title:'Leadership',
-    body:'Wants the whole journey at a glance: which coaches perform, which clients are happy, and whether anyone has been forgotten.',
+    body:'Sees the whole journey at a glance. They expect to know who is performing, who is happy, and that nobody has been forgotten.',
     extra:`<div class="rsec">What you do</div>${steps([
-      ['all', 'Read one contact at a time: Journey Status, status history and Automation Logs'],
+      'Watch the funnel from first click to active coaching, and where people drop off',
+      'Compare coaches by sessions, ratings and caseload',
+      'Check that every paired client is being coached and is happy',
+      'Review week on week and month on month',
     ])}
     <div class="rsec">What you are told</div>${list([
-      ['No summary or dashboard yet', 'n'],
+      'A live summary in Zoho Analytics',
+      'An alert for a paired client with no first session, or a low rating',
     ])}
-    <p class="body">Still to build: the leadership view. For comparison, LifeBridge has a dashboard of zero-hour cells and a daily gap report, and no ratings or alerts.</p>` },
+    <div class="rsec">Guides</div>${guide('Reading the leadership view')}` },
 
-  { id:'r-work', kind:'role', lane:true, x:3200, w:360, tag:'Not on this board',
+  { id:'r-work', kind:'role', lane:true, x:3200, w:360, tag:'Elsewhere',
     title:'QBHS hiring and onboarding',
     body:'A different journey: coaches are hired in Zoho Recruit, onboarded in Zoho People and trained in Zoho Learn. It is documented separately and not repeated here.' },
 ];
