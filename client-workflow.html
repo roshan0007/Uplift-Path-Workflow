@@ -454,48 +454,21 @@ const NODES = [
     body:'Sent if no time is booked when the timer runs out. Marks Steps 1 and 2 complete and asks them to <b>book the assessment</b>, plus send insurance verification or a photo of their card. Returning clients can reply with their mentor&rsquo;s name to keep the same one.',
     shots:[['15-sms-step2.png', 'SMS'], ['14-email-step2.png', 'Email']] },
 
-  /* ---- steps added into the flow where a role needs them ---- */
-  { id:'g-guide', kind:'role', x:1560, bottom:220, w:400, tag:'Clinician · Step 05',
-    title:'Clinician Bookings setup guide',
-    body:'A new clinician gets a guide for setting up their Zoho Bookings profile and joining the round robin. The guide lives in Drive and is linked here, so everything stays on one page.',
-    extra:`<div class="rsec">Guide</div>${guide('Clinician Bookings + round robin setup')}` },
-
-  { id:'g-alert', kind:'role', x:1560, above:['g-guide', 60], w:400, tag:'Clinician · Step 05',
-    title:'Short-notice booking alert',
-    body:'Bookings keeps a minimum notice, so a slot is never taken minutes ahead. The moment a client books with a clinician, the clinician gets an instant SMS or Cliq message.' },
-
-  { id:'g-intake', kind:'role', x:1520, below:['follow', 120], w:400, tag:'Intake · Steps 04–05',
-    title:'Follow-up list, no-shows and resend',
-    body:'Intake gets a list of clients who stopped partway or missed a session, with who to call next. Any message that did not go out can be resent in one click, and a client who never answers is closed out after several attempts.' },
-
-  { id:'g-sync', kind:'role', x:4200, below:['note', 120], w:400, tag:'Assessor · Step 09',
-    title:'Charm and the CRM stay in sync',
-    body:'What Charm sends back, such as the signed assessment note and sessions completed, updates the CRM, so nothing is typed twice and the status always matches the chart.' },
-
+  /* ---- emails sent when a client is paired ---- */
   { id:'devmsg', kind:'msg', x:6800, above:['pairedmsg', 60], w:440, tag:'Email to Devyani · when a client is paired',
     title:'Email to Devyani when a client is paired',
     body:'<b>Subject:</b> Client paired: UPW-123 with (coach name)<br>Devyani receives the same email as the info@ mailbox, every time a client is paired, whether a coach accepts on the website or the team sets <b>Paired Coach</b> by hand. It carries the <b>case ID</b>, the <b>coach&rsquo;s name</b> and a link to the client record in the CRM. No client name or contact details are in the email.',
     shots:[['28-email-info-client-paired.png', 'The same email, as info@ receives it (CRM link hidden)']] },
 
-  { id:'g-notify', kind:'role', x:6800, above:['devmsg', 60], w:440, tag:'Manager · Step 14',
-    title:'Alerts when an offer is not answered',
-    body:'If every offered coach declines, or nobody answers in time, the clinical and operations leads are alerted and the client is offered to other coaches. A list shows every offer still waiting for an answer.' },
+  { id:'clientmsg', kind:'msg', x:7360, bottom:220, w:440, tag:'Email to the client · when a client is paired',
+    title:'Email to the client: meet your Uplift Coach',
+    body:'<b>Subject:</b> Meet your Uplift Coach<br>Sent to the client the moment they are paired. It names their coach, gives the coach&rsquo;s email (and phone, when the coach has one), the case ID and the Uplift number to call or text. Each send is logged on the contact under <b>Automation Logs</b> (Pairing, Client Email).',
+    shots:[['29-email-client-paired.webp', 'The email as the client receives it (email address hidden)']] },
 
-  { id:'g-after', kind:'role', x:7360, bottom:220, w:400, tag:'Client + Coach · After step 14',
-    title:'After pairing, both sides are told',
-    body:'The client hears who their coach is. The coach receives the client&rsquo;s first-session details and a booking link. A reminder goes out before the first session, and the coach is nudged if there has been no contact within a few days.' },
-
-  { id:'g-capacity', kind:'role', x:7360, above:['g-after', 60], w:400, tag:'Coach · Step 13',
-    title:'One-click capacity and availability',
-    body:'A Cliq message or email asks each coach how many clients they can take this month and whether they are away. One click updates their profile, with no CRM login.' },
-
-  { id:'g-feedback', kind:'role', x:7360, above:['g-capacity', 60], w:400, tag:'All roles · After step 14',
-    title:'Feedback',
-    body:'Feedback is collected at every stage, whether or not a coach session happens. Intake and pairing stages use a Zoho survey; after the assessment and after each session, the Charm patient survey. A client paired with a coach but never in touch gets a next-day survey with one reminder.' },
-
-  { id:'g-lead', kind:'role', x:7900, y:300, w:400, tag:'Leadership · Summary',
-    title:'Leadership view',
-    body:'The funnel and drop-off by status, a coach league table (sessions, ratings, top and least performer), and a signal that each paired client is being coached and is happy. Week on week and month on month, live in Zoho Analytics.' },
+  { id:'coachmsg', kind:'msg', x:7360, above:['clientmsg', 60], w:440, tag:'Email to the coach · when a client is paired',
+    title:'Email to the coach: new client paired',
+    body:'<b>Subject:</b> New client paired with you: UPW-123<br>Sent to the coach at the same moment. It carries the <b>case ID</b> and the client&rsquo;s name, email and phone, and asks the coach to reach out and plan the first session. Each send is logged on the contact under <b>Automation Logs</b> (Pairing, Coach Email).',
+    shots:[['30-email-coach-paired.webp', 'The email as the coach receives it (email and phone hidden)']] },
 
   /* ---- lane under the whole board: each role's part of the journey ---- */
   { id:'who', kind:'role', lane:true, x:0, w:400, tag:'Who does what',
@@ -512,7 +485,7 @@ const NODES = [
 
   { id:'r-client', kind:'role', lane:true, x:440, w:420, tag:'Role',
     title:'Client',
-    body:'The person who signs up for Uplift Coaching.',
+    body:'The person who signs up for Uplift Coaching, often from their phone. They go from the first click to meeting their coach, and rely on the system to keep them informed along the way.',
     extra:`<div class="rsec">What you do</div>${steps([
       'Find Uplift Path on Google, an ad or a referral, and click Get Started',
       'Fill in the application',
@@ -541,7 +514,7 @@ const NODES = [
 
   { id:'r-intake', kind:'role', lane:true, x:900, w:420, tag:'Role',
     title:'Intake team',
-    body:'The people clients hear from first.',
+    body:'The people clients hear from first. They help clients finish signing up, confirm eligibility and insurance details, book assessments by phone, and make sure no one is left behind.',
     extra:`<div class="rsec">What you do</div>${steps([
       'Call and check in with every client who stops partway, and help them finish',
       'Book the assessment by phone for clients who call in',
@@ -565,7 +538,7 @@ const NODES = [
 
   { id:'r-assessor', kind:'role', lane:true, x:1360, w:420, tag:'Role',
     title:'Clinician / assessor',
-    body:'The clinician who meets each new client, records the assessment and hands them to the right coach.',
+    body:'The clinician who meets each new client, records the assessment in Charm, notes what kind of coach the client wants, and hands them to the right coach by sending the offer.',
     extra:`<div class="rsec">What you do</div>${steps([
       'Set up your Zoho Bookings profile and join the round robin',
       'Meet the booked client, then write and sign the assessment note in Charm',
@@ -590,7 +563,7 @@ const NODES = [
 
   { id:'r-coach', kind:'role', lane:true, x:1820, w:420, tag:'Role',
     title:'Coach (QBHS)',
-    body:'The Uplift Coach who supports the client day to day.',
+    body:'The Uplift Coach who supports the client day to day. They receive the offer, accept or decline it, then contact the client, hold the first session and keep coaching.',
     extra:`<div class="rsec">What you do</div>${steps([
       'Keep your capacity and availability up to date with one click',
       'Open the offer and accept or decline',
@@ -614,7 +587,7 @@ const NODES = [
 
   { id:'r-manager', kind:'role', lane:true, x:2280, w:420, tag:'Role',
     title:'Manager',
-    body:'The clinical and operations leads who keep pairing and workload on track.',
+    body:'The clinical and operations leads who keep pairing and workload on track. They watch offers and acceptances, step in when a client is waiting, and keep caseloads balanced.',
     extra:`<div class="rsec">What you do</div>${steps([
       'Review coach suggestions and offers on each contact',
       'Follow every client&rsquo;s status and history',
@@ -636,7 +609,7 @@ const NODES = [
 
   { id:'r-lead', kind:'role', lane:true, x:2740, w:420, tag:'Role',
     title:'Leadership',
-    body:'Sees the whole journey at a glance.',
+    body:'Sees the whole journey at a glance, from the first click to active coaching. They look at the numbers across all clients and coaches, not one contact at a time.',
     extra:`<div class="rsec">What you do</div>${steps([
       'Watch the funnel from first click to active coaching, and where people drop off',
       'Compare coaches by sessions, ratings and caseload',
@@ -687,13 +660,9 @@ const EDGES = [
   { from:'book',   fs:'b', to:'back2',   ts:'t', label:'backs out', dashed:true, color:'red' },
   { from:'back2',  fs:'b', to:'follow2', ts:'t', label:'after 15 min' },
 
-  /* steps still to build, tied to the card they follow */
-  { from:'book',   fs:'t', to:'g-guide',  ts:'b', dashed:true },
-  { from:'follow', fs:'b', to:'g-intake', ts:'t', dashed:true },
-  { from:'note',   fs:'b', to:'g-sync',   ts:'t', dashed:true },
-  { from:'accept', fs:'t', to:'devmsg',   ts:'b', dashed:true },
-  { from:'coach',  fs:'t', to:'g-after',  ts:'b', dashed:true },
-  { from:'coach',  fs:'r', to:'g-lead',   ts:'l', label:'summary', dashed:true },
+  { from:'accept', fs:'t', to:'devmsg',    ts:'b', dashed:true },
+  { from:'accept', fs:'t', to:'clientmsg', ts:'b', dashed:true },
+  { from:'accept', fs:'t', to:'coachmsg',  ts:'b', dashed:true },
 ];
 
 /* ---------------- build ---------------- */
