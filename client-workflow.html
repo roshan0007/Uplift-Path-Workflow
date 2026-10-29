@@ -500,7 +500,7 @@ const NODES = [
   /* ---- lane under the whole board: each role's part of the journey ---- */
   { id:'who', kind:'role', lane:true, x:0, w:400, tag:'Who does what',
     title:'Each role&rsquo;s part of the journey',
-    body:'Find your role. Each card says what the role means, what it does in order, what it is told, and where its guides are.',
+    body:'Find your role. Each card says what the role means, what it expects from the process, what it does in order, the notifications it receives, and where its guides are.',
     extra:`<div class="rsec">Roles</div>${list([
       'Client',
       'Intake team',
@@ -512,8 +512,16 @@ const NODES = [
 
   { id:'r-client', kind:'role', lane:true, x:440, w:420, tag:'Role',
     title:'Client',
-    body:'The person who signs up for Uplift Coaching. They expect a simple sign-up, clear confirmation at every step, and a coach who fits them.',
-    extra:`<div class="rsec">What you do</div>${steps([
+    body:'The person who signs up for Uplift Coaching.',
+    extra:`<div class="rsec">What you expect</div>${list([
+      'A sign-up that takes minutes and works on a phone',
+      'Confirmation at every step, so they know it went through',
+      'A session time that fits their life, with an easy way to reschedule or cancel',
+      'Their details asked for once, and kept private',
+      'A coach who fits them, is available, and actually gets in touch',
+      'To keep hearing from Uplift after they sign up, not be left waiting',
+    ])}
+    <div class="rsec">What you do</div>${steps([
       'Find Uplift Path on Google, an ad or a referral, and click Get Started',
       'Fill in the application',
       'Check eligibility with your Case ID',
@@ -522,27 +530,33 @@ const NODES = [
       'Meet your assessor and say what kind of coach you want',
       'Meet your coach',
     ])}
-    <div class="rsec">What you are told</div>${list([
+    <div class="rsec">Notifications received</div>${list([
       'A welcome SMS and email as soon as you apply',
       'A reminder if you stop partway',
       'Your session confirmation, with Join, Reschedule and Cancel buttons',
       'Your signed consent form as a PDF',
       'Who your coach is, and a reminder before your first session',
       'A short feedback request after your first sessions',
-    ])}
-    <div class="rsec">Guides</div>${guide('Getting started with Uplift')}` },
+    ])}` },
 
   { id:'r-intake', kind:'role', lane:true, x:900, w:420, tag:'Role',
     title:'Intake team',
-    body:'The people clients hear from first. They expect to know exactly who needs a call, and that no client slips away unnoticed.',
-    extra:`<div class="rsec">What you do</div>${steps([
+    body:'The people clients hear from first.',
+    extra:`<div class="rsec">What you expect</div>${list([
+      'To see at a glance who needs a call and how far each client got',
+      'Messages that go out on their own, and a way to resend if one fails',
+      'No client slipping away unnoticed',
+      'Eligibility and insurance details that are right before a session is booked',
+      'A clean hand-off to the assessor, with nothing to type twice',
+    ])}
+    <div class="rsec">What you do</div>${steps([
       'Call and check in with every client who stops partway, and help them finish',
       'Book the assessment by phone for clients who call in',
       'Confirm eligibility and insurance details with the client',
       'Convert the client to a patient in Charm once enrolled',
       'Rebook clients who missed a session',
     ])}
-    <div class="rsec">What you are told</div>${list([
+    <div class="rsec">Notifications received</div>${list([
       'A list of who needs a call, and how far each client got',
       'An alert when a client misses a session, with a rebook message ready to send',
       'A one-click resend for any message that did not go out',
@@ -551,8 +565,15 @@ const NODES = [
 
   { id:'r-assessor', kind:'role', lane:true, x:1360, w:420, tag:'Role',
     title:'Clinician / assessor',
-    body:'The clinician who meets each new client, records the assessment and hands them to the right coach. They expect a calendar that only holds bookings they can keep, and everything in one place.',
-    extra:`<div class="rsec">What you do</div>${steps([
+    body:'The clinician who meets each new client, records the assessment and hands them to the right coach.',
+    extra:`<div class="rsec">What you expect</div>${list([
+      'A calendar that only holds bookings they can keep, never a slot booked minutes ahead',
+      'To know straight away when a client books with them',
+      'Everything for the assessment in one place, with Charm and the CRM kept in step',
+      'Coach suggestions that already leave out coaches who are full or away',
+      'To know when the right coach has accepted',
+    ])}
+    <div class="rsec">What you do</div>${steps([
       'Set up your Zoho Bookings profile and join the round robin',
       'Meet the booked client, then write and sign the assessment note in Charm',
       'Mark the assessment done in the CRM',
@@ -560,7 +581,7 @@ const NODES = [
       'Review the five suggested coaches',
       'Pick the coaches and send the offer',
     ])}
-    <div class="rsec">What you are told</div>${list([
+    <div class="rsec">Notifications received</div>${list([
       'An instant message the moment a client books with you',
       'A reminder before each assessment',
       'A notice when a coach accepts your client',
@@ -569,14 +590,21 @@ const NODES = [
 
   { id:'r-coach', kind:'role', lane:true, x:1820, w:420, tag:'Role',
     title:'Coach (QBHS)',
-    body:'The Uplift Coach who supports the client day to day. They expect clients who fit them, a simple way to say yes or no, and control of their own capacity.',
-    extra:`<div class="rsec">What you do</div>${steps([
+    body:'The Uplift Coach who supports the client day to day.',
+    extra:`<div class="rsec">What you expect</div>${list([
+      'To be offered only clients who fit them, and only when they have room and are not away',
+      'One click to say yes or no, and to update their capacity, with no CRM login',
+      'The client&rsquo;s first-session details the moment they accept',
+      'A client who is expecting to hear from them',
+      'Not to be chased for anything the system can already see',
+    ])}
+    <div class="rsec">What you do</div>${steps([
       'Keep your capacity and availability up to date with one click',
       'Open the offer and accept or decline',
       'Contact the client and hold the first session',
       'Keep coaching; the client counts in your caseload',
     ])}
-    <div class="rsec">What you are told</div>${list([
+    <div class="rsec">Notifications received</div>${list([
       'The offer email, with the case ID only',
       'The client&rsquo;s first-session details and a booking link once you accept',
       'A monthly one-click message asking for your capacity and availability',
@@ -586,14 +614,20 @@ const NODES = [
 
   { id:'r-manager', kind:'role', lane:true, x:2280, w:420, tag:'Role',
     title:'Manager',
-    body:'The clinical and operations leads who keep pairing and workload on track. They expect to know the moment a client is paired, and to be warned when one is stuck.',
-    extra:`<div class="rsec">What you do</div>${steps([
+    body:'The clinical and operations leads who keep pairing and workload on track.',
+    extra:`<div class="rsec">What you expect</div>${list([
+      'To know the moment a client is paired, without opening each contact',
+      'To be warned when an offer sits unanswered, and a quick way to offer the client to other coaches',
+      'Caseloads that stay balanced across coaches',
+      'One place to see every client&rsquo;s status and history',
+    ])}
+    <div class="rsec">What you do</div>${steps([
       'Review coach suggestions and offers on each contact',
       'Follow every client&rsquo;s status and history',
       'Step in when an offer is not answered and offer the client to other coaches',
       'Balance caseloads across coaches',
     ])}
-    <div class="rsec">What you are told</div>${list([
+    <div class="rsec">Notifications received</div>${list([
       'A notice the moment a coach accepts a client',
       'An alert if every offered coach declines or nobody answers in time',
       'A list of offers still waiting for an answer',
@@ -602,18 +636,24 @@ const NODES = [
 
   { id:'r-lead', kind:'role', lane:true, x:2740, w:420, tag:'Role',
     title:'Leadership',
-    body:'Sees the whole journey at a glance. They expect to know who is performing, who is happy, and that nobody has been forgotten.',
-    extra:`<div class="rsec">What you do</div>${steps([
+    body:'Sees the whole journey at a glance.',
+    extra:`<div class="rsec">What you expect</div>${list([
+      'The whole journey live, without having to ask anyone',
+      'To see who is performing: sessions, ratings and caseload',
+      'To know every paired client is being coached and is happy',
+      'To see where clients drop off, and why',
+      'Nobody forgotten',
+    ])}
+    <div class="rsec">What you do</div>${steps([
       'Watch the funnel from first click to active coaching, and where people drop off',
       'Compare coaches by sessions, ratings and caseload',
       'Check that every paired client is being coached and is happy',
       'Review week on week and month on month',
     ])}
-    <div class="rsec">What you are told</div>${list([
+    <div class="rsec">Notifications received</div>${list([
       'A live summary in Zoho Analytics',
       'An alert for a paired client with no first session, or a low rating',
-    ])}
-    <div class="rsec">Guides</div>${guide('Reading the leadership view')}` },
+    ])}` },
 
   { id:'r-work', kind:'role', lane:true, x:3200, w:360, tag:'Elsewhere',
     title:'QBHS hiring and onboarding',
