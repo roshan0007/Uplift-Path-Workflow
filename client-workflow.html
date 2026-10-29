@@ -224,7 +224,7 @@
 
 <div id="viewport">
   <div id="world">
-    <div id="frame2"><div id="frame2-chip">Who uses this journey · what each role gets and what is missing</div></div>
+    <div id="frame2"><div id="frame2-chip">Roles · what each one does, expects and receives</div></div>
     <div id="frame"><div id="frame-chip">Peer Coaching · sign-up (Steps 1–4) → Charm → coaching</div></div>
     <svg id="edges" aria-hidden="true">
       <defs>
@@ -712,10 +712,13 @@ function place() {
     const [ref, gap] = n.above, r = els[ref];
     els[n.id].style.top = (r.offsetTop - gap - els[n.id].offsetHeight) + 'px';
   }
-  // The "Who uses this journey" lane sits under every other card.
-  let low = 0;
-  for (const n of NODES) if (!n.lane) low = Math.max(low, els[n.id].offsetTop + els[n.id].offsetHeight);
-  for (const n of NODES) if (n.lane) els[n.id].style.top = (low + 260) + 'px';
+  // The roles lane sits above the whole board, top-aligned, clear of its frame.
+  let high = 1e9, tall = 0;
+  for (const n of NODES) {
+    if (n.lane) tall = Math.max(tall, els[n.id].offsetHeight);
+    else high = Math.min(high, els[n.id].offsetTop);
+  }
+  for (const n of NODES) if (n.lane) els[n.id].style.top = (high - 220 - tall) + 'px';
 }
 
 const rect = (id) => { const e = els[id]; return { x:e.offsetLeft, y:e.offsetTop, w:e.offsetWidth, h:e.offsetHeight }; };
