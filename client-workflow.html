@@ -197,7 +197,7 @@
   <symbol id="i-close" viewBox="0 0 16 16"><path d="M3 10l5-5 5 5M3 13.5h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </svg>
 
-<div id="crumbs" class="chrome"><a href="index.html">Workflow Hub</a><span>/</span><b>Client Workflow</b><span>·</span><span>Peer Coaching sign-up</span></div>
+<div id="crumbs" class="chrome"><a href="index.html">Workflow Hub</a><span>/</span><b>Client Workflow</b><span>·</span><span>Uplift Coaching sign-up</span></div>
 
 <div id="tools" class="chrome" role="toolbar" aria-label="Canvas controls">
   <button id="zin" type="button" aria-label="Zoom in" title="Zoom in (+)">+</button>
@@ -224,8 +224,8 @@
 
 <div id="viewport">
   <div id="world">
-    <div id="frame2"><div id="frame2-chip">Who uses this journey · what each role gets and what is missing</div></div>
-    <div id="frame"><div id="frame-chip">Peer Coaching · sign-up (Steps 1–4) → Charm → coaching</div></div>
+    <div id="frame2"><div id="frame2-chip">Roles · what each one does, expects and receives</div></div>
+    <div id="frame"><div id="frame-chip">Uplift Coaching · sign-up (Steps 1–4) → Charm → coaching</div></div>
     <svg id="edges" aria-hidden="true">
       <defs>
         <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4a5568"/></marker>
@@ -292,15 +292,15 @@ const NODES = [
     title:'Finds Uplift Path on Google',
     body:'Searches and clicks the <b>upliftpathwellness.com</b> result.',
     extra:`<div class="serp">
-      <div class="serp-site"><span class="serp-fav"></span><div><div class="serp-name">Uplift Path</div><div class="serp-url">https://upliftpathwellness.com › peer-coaching</div></div></div>
-      <a class="serp-title" href="https://upliftpathwellness.com/peer-coaching" target="_blank" rel="noopener">Telehealth Peer Support for Adults in Ohio | Uplift Path</a>
-      <div class="serp-desc">Peer support and connections to community resources for adults across Ohio. Meet your Uplift Peer Coach by phone or video, on a schedule that fits around your life.</div>
+      <div class="serp-site"><span class="serp-fav"></span><div><div class="serp-name">Uplift Path</div><div class="serp-url">https://upliftpathwellness.com</div></div></div>
+      <a class="serp-title" href="https://upliftpathwellness.com/peer-coaching" target="_blank" rel="noopener">Telehealth Coaching for Adults in Ohio | Uplift Path</a>
+      <div class="serp-desc">Coaching and connections to community resources for adults across Ohio. Meet your Uplift Coach by phone or video, on a schedule that fits around your life.</div>
     </div>` },
 
   /* other ways in, stacked around the search card */
   { id:'mkt', kind:'entry', x:0, bottom:260, w:330, tag:'01 · Source · Marketing',
     title:'Marketing campaigns',
-    body:'Sees an Uplift Path ad or post (social media, email campaign) and clicks through to the Peer Coaching page.',
+    body:'Sees an Uplift Path ad or post (social media, email campaign) and clicks through to the Uplift Coaching page.',
     extra:'<div class="slot">Ad / campaign screenshot: to be added</div>' },
 
   { id:'ref', kind:'entry', x:0, below:['search', 40], w:330, tag:'01 · Source · Referral',
@@ -309,15 +309,15 @@ const NODES = [
     extra:'<div class="slot">Referral / flyer screenshot: to be added</div>' },
 
   { id:'page', kind:'site', x:450, y:300, w:400, tag:'02 · Website',
-    title:'Peer Coaching page',
-    body:'Lands on <a href="https://upliftpathwellness.com/peer-coaching" target="_blank" rel="noopener">/peer-coaching</a> and clicks <b>Get Started</b>.',
-    shots:[['00-peer-coaching-page.webp', 'Individualized Support for Ohio Adults']] },
+    title:'Uplift Coaching page',
+    body:'Lands on <a href="https://upliftpathwellness.com/peer-coaching" target="_blank" rel="noopener">the Uplift Coaching page</a> and clicks <b>Get Started</b>.',
+    shots:[['00-coaching-page.webp', 'Individualized Support for Ohio Adults']] },
 
   { id:'app', kind:'form', x:980, y:300, w:400, tag:'03 · Step 1 · Zoho form',
     title:'Application popup',
     status:{ t:'Application Submitted', c:'s1', note:'set instantly on submit' },
     body:'Enters <b>first name, last name, email and phone</b>, then Submit. The <b>18+ and live in Ohio</b> box is <b>pre-ticked</b>.',
-    shots:[['01-application-popup.webp', 'Step 1 popup: Find The Right Peer Coach For You']],
+    shots:[['01-application-popup.webp', 'Step 1 popup: the application form']],
     meta:[['Form','Zoho Form, embedded on the site'],
           ['On submit','Values go into Zoho CRM']] },
 
@@ -325,7 +325,7 @@ const NODES = [
     title:'Eligibility',
     status:{ t:'Eligibility Completed', c:'s2', note:'set instantly on submit' },
     body:'A <b>Case ID</b> is generated and the user lands here with it in the URL. They pick their Medicaid company and enter Medicaid ID or SSN, date of birth, gender and address.',
-    shots:[['02-eligibility-page.webp', 'Step 2: Check Your Eligibility For Peer Coaching']],
+    shots:[['02-eligibility-page.webp', 'Step 2: Check Your Eligibility']],
     meta:[['URL','<code>/cmps?caseid=UPW-259</code>']] },
 
   { id:'book', kind:'site', x:2060, y:300, w:400, tag:'05 · Step 3 · Scheduling',
@@ -338,7 +338,7 @@ const NODES = [
   { id:'consent', kind:'form', x:2600, y:300, w:400, tag:'06 · Step 4 · Zoho form',
     title:'Signs the consent form',
     status:{ t:'Consent Signed', c:'s4', note:'set about 2 min after signing' },
-    body:'Reviews what stays private, what is shared and with whom, and what to expect from the Peer Coach, then signs. Name and date of birth arrive already filled in.',
+    body:'Reviews what stays private, what is shared and with whom, and what to expect from the Uplift Coach, then signs. Name and date of birth arrive already filled in.',
     shots:[['07-consent-page.webp', 'Step 4: Review And Sign Your Consent Form']],
     meta:[['URL','<code>/consent-form?caseid=UPW-260</code>']] },
 
@@ -712,10 +712,13 @@ function place() {
     const [ref, gap] = n.above, r = els[ref];
     els[n.id].style.top = (r.offsetTop - gap - els[n.id].offsetHeight) + 'px';
   }
-  // The "Who uses this journey" lane sits under every other card.
-  let low = 0;
-  for (const n of NODES) if (!n.lane) low = Math.max(low, els[n.id].offsetTop + els[n.id].offsetHeight);
-  for (const n of NODES) if (n.lane) els[n.id].style.top = (low + 260) + 'px';
+  // The roles lane sits above the whole board, top-aligned, clear of its frame.
+  let high = 1e9, tall = 0;
+  for (const n of NODES) {
+    if (n.lane) tall = Math.max(tall, els[n.id].offsetHeight);
+    else high = Math.min(high, els[n.id].offsetTop);
+  }
+  for (const n of NODES) if (n.lane) els[n.id].style.top = (high - 220 - tall) + 'px';
 }
 
 const rect = (id) => { const e = els[id]; return { x:e.offsetLeft, y:e.offsetTop, w:e.offsetWidth, h:e.offsetHeight }; };
