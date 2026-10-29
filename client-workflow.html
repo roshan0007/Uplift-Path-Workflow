@@ -29,6 +29,7 @@
     --drop-bg:#351618;   --drop-line:#78302f;   --drop-accent:#ff948f;
     --next-bg:#12301f;   --next-line:#21593c;   --next-accent:#74dfa5;
     --charm-bg:#0f2f33;  --charm-line:#1f5d63;  --charm-accent:#6fd6d6;
+    --role-bg:#1f1a38;   --role-line:#42376e;   --role-accent:#b9a2ff;
 
     --mono:'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
   }
@@ -62,8 +63,8 @@
   }
 
   /* section frame, as Heptabase groups a flow */
-  #frame{ position:absolute; border:1.5px solid #3b3b42; border-radius:14px; background:rgba(255,255,255,.012); pointer-events:none; }
-  #frame-chip{
+  #frame, #frame2{ position:absolute; border:1.5px solid #3b3b42; border-radius:14px; background:rgba(255,255,255,.012); pointer-events:none; }
+  #frame-chip, #frame2-chip{
     position:absolute; left:-1px; top:-34px; background:#6e6e76; color:#fff;
     font-weight:600; font-size:15px; padding:5px 14px; border-radius:8px; white-space:nowrap;
   }
@@ -85,6 +86,19 @@
   .k-drop {--n-bg:var(--drop-bg); --n-line:var(--drop-line); --n-accent:var(--drop-accent);}
   .k-next {--n-bg:var(--next-bg); --n-line:var(--next-line); --n-accent:var(--next-accent);}
   .k-charm{--n-bg:var(--charm-bg);--n-line:var(--charm-line);--n-accent:var(--charm-accent);}
+  .k-role {--n-bg:var(--role-bg); --n-line:var(--role-line); --n-accent:var(--role-accent);}
+
+  /* "Who uses this journey" lane: sections, lists and the how-sure-are-we tags */
+  .rsec{ margin:14px 0 6px; font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .rlist{ margin:0; padding-left:17px; font-size:12.5px; line-height:1.55; color:var(--text-soft); }
+  .rlist li + li{ margin-top:5px; }
+  .rlist b{ color:var(--text); font-weight:600; }
+  .rsec ~ .body{ margin-top:12px; }
+  .rlist.steps{ list-style:none; padding-left:0; }
+  .rlist.steps li{ display:flex; gap:8px; }
+  .stp{ flex:0 0 18px; margin-top:1px; font-family:var(--mono); font-size:10.5px; font-weight:500; color:var(--role-accent); }
+  .gd{ display:inline-block; margin:2px 6px 2px 0; padding:3px 9px; border-radius:6px; font-size:11.5px; line-height:1.4;
+    border:1px solid var(--role-line); color:var(--focus); text-decoration:none; }
 
   /* CRM "Journey Status" shown on a card: same stage names and colours as the CRM */
   .status{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin:0 0 10px; }
@@ -203,12 +217,14 @@
   <div class="lrow"><span class="sw" style="background:var(--msg-bg);border-color:var(--msg-line)"></span>SMS / email</div>
   <div class="lrow"><span class="sw" style="background:var(--wait-bg);border-color:var(--wait-line)"></span>Timer</div>
   <div class="lrow"><span class="sw" style="background:var(--drop-bg);border-color:var(--drop-line)"></span>Drop-off</div>
+  <div class="lrow"><span class="sw" style="background:var(--role-bg);border-color:var(--role-line)"></span>Roles</div>
 </div>
 
 <div id="hint" class="chrome">Drag to pan · Ctrl or ⌘ + scroll to zoom · ▾ on a card folds it · click a card to trace its arrows</div>
 
 <div id="viewport">
   <div id="world">
+    <div id="frame2"><div id="frame2-chip">Who uses this journey · what each role gets and what is missing</div></div>
     <div id="frame"><div id="frame-chip">Peer Coaching · sign-up (Steps 1–4) → Charm → coaching</div></div>
     <svg id="edges" aria-hidden="true">
       <defs>
@@ -240,6 +256,35 @@ const TIMER = `<div class="timer">
   <div class="tbox"><div class="v">15 min</div><div class="l">Live</div></div>
   <div class="tbox"><div class="v">2 min</div><div class="l">Test</div></div>
 </div>`;
+
+/* "Who uses this journey" lane: plain lists, numbered steps and guide links. */
+const list = (items) => `<ul class="rlist">${items.map((text) => `<li>${text}</li>`).join('')}</ul>`;
+const steps = (items) => `<ol class="rlist steps">${items.map((text, i) => `<li><span class="stp">${i + 1}</span>${text}</li>`).join('')}</ol>`;
+/* A guide link. Pass the Drive / WorkDrive URL as href once the guide exists. */
+const guide = (label, href) => href
+  ? `<a class="gd" href="${href}" target="_blank" rel="noopener">${label}</a>`
+  : `<span class="gd">${label}</span>`;
+
+/* One "Who" line on each step card, so a reader can go from a step to the roles around it. */
+const WHO = {
+  search:'Client',
+  mkt:'Client',
+  ref:'Client',
+  page:'Client',
+  app:'Client (gets a welcome SMS + email)',
+  elig:'Client; intake follows up if they stop here',
+  book:'Client; assessor (round robin); intake if booking by phone',
+  consent:'Client',
+  done:'Client',
+  conv:'Intake team',
+  note:'Clinician / assessor',
+  adone:'Clinician / assessor',
+  prefs:'Clinician / assessor',
+  sugg:'Clinician / assessor and clinical managers read the list',
+  offer:'Assessor sends; the coaches are told',
+  accept:'Coach acts; clinical managers and info@ are told',
+  coach:'Coach; the client and clinical managers are told',
+};
 
 const NODES = [
   /* ---- main row: the path a client walks ---- */
@@ -408,6 +453,181 @@ const NODES = [
     title:'Step 2 reminder',
     body:'Sent if no time is booked when the timer runs out. Marks Steps 1 and 2 complete and asks them to <b>book the assessment</b>, plus send insurance verification or a photo of their card. Returning clients can reply with their mentor&rsquo;s name to keep the same one.',
     shots:[['15-sms-step2.png', 'SMS'], ['14-email-step2.png', 'Email']] },
+
+  /* ---- emails sent when a client is paired ---- */
+  { id:'devmsg', kind:'msg', x:6800, above:['pairedmsg', 60], w:440, tag:'Email to Devyani · when a client is paired',
+    title:'Email to Devyani when a client is paired',
+    body:'<b>Subject:</b> Client paired: UPW-123 with (coach name)<br>Devyani receives the same email as the info@ mailbox, every time a client is paired, whether a coach accepts on the website or the team sets <b>Paired Coach</b> by hand. It carries the <b>case ID</b>, the <b>coach&rsquo;s name</b> and a link to the client record in the CRM. No client name or contact details are in the email.',
+    shots:[['28-email-info-client-paired.png', 'The same email, as info@ receives it (CRM link hidden)']] },
+
+  { id:'clientmsg', kind:'msg', x:7360, bottom:220, w:440, tag:'Email to the client · when a client is paired',
+    title:'Email to the client: meet your Uplift Coach',
+    body:'<b>Subject:</b> Meet your Uplift Coach<br>Sent to the client the moment they are paired. It names their coach, gives the coach&rsquo;s email (and phone, when the coach has one), the case ID and the Uplift number to call or text. Each send is logged on the contact under <b>Automation Logs</b> (Pairing, Client Email).',
+    shots:[['29-email-client-paired.webp', 'The email as the client receives it (email address hidden)']] },
+
+  { id:'coachmsg', kind:'msg', x:7360, above:['clientmsg', 60], w:440, tag:'Email to the coach · when a client is paired',
+    title:'Email to the coach: new client paired',
+    body:'<b>Subject:</b> New client paired with you: UPW-123<br>Sent to the coach at the same moment. It carries the <b>case ID</b> and the client&rsquo;s name, email and phone, and asks the coach to reach out and plan the first session. Each send is logged on the contact under <b>Automation Logs</b> (Pairing, Coach Email).',
+    shots:[['30-email-coach-paired.webp', 'The email as the coach receives it (email and phone hidden)']] },
+
+  /* ---- lane under the whole board: each role's part of the journey ---- */
+  { id:'who', kind:'role', lane:true, x:0, w:400, tag:'Who does what',
+    title:'Each role&rsquo;s part of the journey',
+    body:'Find your role. Each card says what the role means, what it does in order, what it expects from the process, the notifications it receives, and where its guides are.',
+    extra:`<div class="rsec">Roles</div>${list([
+      'Client',
+      'Intake team',
+      'Clinician / assessor',
+      'Coach',
+      'Clinical manager',
+      'Leadership',
+    ])}` },
+
+  { id:'r-client', kind:'role', lane:true, x:440, w:420, tag:'Role',
+    title:'Client',
+    body:'The person who signs up for Uplift Coaching, often from their phone. They go from the first click to meeting their coach, and rely on the system to keep them informed along the way.',
+    extra:`<div class="rsec">What you do</div>${steps([
+      'Find Uplift Path on Google, an ad or a referral, and click Get Started',
+      'Fill in the application',
+      'Check eligibility with your Case ID',
+      'Pick a session time',
+      'Sign the consent form',
+      'Meet your assessor and say what kind of coach you want',
+      'Meet your coach',
+    ])}
+    <div class="rsec">What you expect</div>${list([
+      'A sign-up that takes minutes and works on a phone',
+      'Confirmation at every step, so they know it went through',
+      'A session time that fits their life, with an easy way to reschedule or cancel',
+      'Their details asked for once, and kept private',
+      'A coach who fits them, is available, and actually gets in touch',
+      'To keep hearing from Uplift after they sign up, not be left waiting',
+    ])}
+    <div class="rsec">Notifications received</div>${list([
+      'A welcome SMS and email as soon as you apply',
+      'A reminder if you stop partway',
+      'Your session confirmation, with Join, Reschedule and Cancel buttons',
+      'Your signed consent form as a PDF',
+      'Who your coach is, and a reminder before your first session',
+      'A short feedback request after your first sessions',
+    ])}` },
+
+  { id:'r-intake', kind:'role', lane:true, x:900, w:420, tag:'Role',
+    title:'Intake team',
+    body:'The people clients hear from first. They help clients finish signing up, confirm eligibility and insurance details, book assessments by phone, and make sure no one is left behind.',
+    extra:`<div class="rsec">What you do</div>${steps([
+      'Call and check in with every client who stops partway, and help them finish',
+      'Book the assessment by phone for clients who call in',
+      'Confirm eligibility and insurance details with the client',
+      'Convert the client to a patient in Charm once enrolled',
+      'Rebook clients who missed a session',
+    ])}
+    <div class="rsec">What you expect</div>${list([
+      'To see at a glance who needs a call and how far each client got',
+      'Messages that go out on their own, and a way to resend if one fails',
+      'No client slipping away unnoticed',
+      'Eligibility and insurance details that are right before a session is booked',
+      'A clean hand-off to the assessor, with nothing to type twice',
+    ])}
+    <div class="rsec">Notifications received</div>${list([
+      'A list of who needs a call, and how far each client got',
+      'An alert when a client misses a session, with a rebook message ready to send',
+      'A one-click resend for any message that did not go out',
+    ])}
+    <div class="rsec">Guides</div>${guide('Following up and converting')}` },
+
+  { id:'r-assessor', kind:'role', lane:true, x:1360, w:420, tag:'Role',
+    title:'Clinician / assessor',
+    body:'The clinician who meets each new client, records the assessment in Charm, notes what kind of coach the client wants, and hands them to the right coach by sending the offer.',
+    extra:`<div class="rsec">What you do</div>${steps([
+      'Set up your Zoho Bookings profile and join the round robin',
+      'Meet the booked client, then write and sign the assessment note in Charm',
+      'Mark the assessment done in the CRM',
+      'Record what kind of coach the client wants',
+      'Review the five suggested coaches',
+      'Pick the coaches and send the offer',
+    ])}
+    <div class="rsec">What you expect</div>${list([
+      'A calendar that only holds bookings they can keep, never a slot booked minutes ahead',
+      'To know straight away when a client books with them',
+      'Everything for the assessment in one place, with Charm and the CRM kept in step',
+      'Coach suggestions that already leave out coaches who are full or away',
+      'To know when the right coach has accepted',
+    ])}
+    <div class="rsec">Notifications received</div>${list([
+      'An instant message the moment a client books with you',
+      'A reminder before each assessment',
+      'A notice when a coach accepts your client',
+    ])}
+    <div class="rsec">Guides</div>${guide('Bookings profile + round robin')}${guide('Charm note and CRM steps')}` },
+
+  { id:'r-coach', kind:'role', lane:true, x:1820, w:420, tag:'Role',
+    title:'Coach (QBHS)',
+    body:'The Uplift Coach who supports the client day to day. They receive the offer, accept or decline it, then contact the client, hold the first session and keep coaching.',
+    extra:`<div class="rsec">What you do</div>${steps([
+      'Keep your capacity and availability up to date with one click',
+      'Open the offer and accept or decline',
+      'Contact the client and hold the first session',
+      'Keep coaching; the client counts in your caseload',
+    ])}
+    <div class="rsec">What you expect</div>${list([
+      'To be offered only clients who fit them, and only when they have room and are not away',
+      'One click to say yes or no, and to update their capacity, with no CRM login',
+      'The client&rsquo;s first-session details the moment they accept',
+      'A client who is expecting to hear from them',
+      'Not to be chased for anything the system can already see',
+    ])}
+    <div class="rsec">Notifications received</div>${list([
+      'The offer email, with the case ID only',
+      'The client&rsquo;s first-session details and a booking link once you accept',
+      'A monthly one-click message asking for your capacity and availability',
+      'A nudge if first contact has not happened within a few days',
+    ])}
+    <div class="rsec">Guides</div>${guide('Accepting a client and updating your capacity')}` },
+
+  { id:'r-manager', kind:'role', lane:true, x:2280, w:420, tag:'Role',
+    title:'Clinical manager',
+    body:'The clinical and operations leads who keep pairing and workload on track. They watch offers and acceptances, step in when a client is waiting, and keep caseloads balanced.',
+    extra:`<div class="rsec">What you do</div>${steps([
+      'Review coach suggestions and offers on each contact',
+      'Follow every client&rsquo;s status and history',
+      'Step in when an offer is not answered and offer the client to other coaches',
+      'Balance caseloads across coaches',
+    ])}
+    <div class="rsec">What you expect</div>${list([
+      'To know the moment a client is paired, without opening each contact',
+      'To be warned when an offer sits unanswered, and a quick way to offer the client to other coaches',
+      'Caseloads that stay balanced across coaches',
+      'One place to see every client&rsquo;s status and history',
+    ])}
+    <div class="rsec">Notifications received</div>${list([
+      'A notice the moment a coach accepts a client',
+      'An alert if every offered coach declines or nobody answers in time',
+      'A list of offers still waiting for an answer',
+    ])}
+    <div class="rsec">Guides</div>${guide('Reading pairing and the activity log')}` },
+
+  { id:'r-lead', kind:'role', lane:true, x:2740, w:420, tag:'Role',
+    title:'Leadership',
+    body:'Sees the whole journey at a glance, from the first click to active coaching. They look at the numbers across all clients and coaches, not one contact at a time.',
+    extra:`<div class="rsec">What you do</div>${steps([
+      'Watch the funnel from first click to active coaching, and where people drop off',
+      'Compare coaches by sessions, ratings and caseload',
+      'Check that every paired client is being coached and is happy',
+      'Review week on week and month on month',
+    ])}
+    <div class="rsec">What you expect</div>${list([
+      'The whole journey live, without having to ask anyone',
+      'To see who is performing: sessions, ratings and caseload',
+      'To know every paired client is being coached and is happy',
+      'To see where clients drop off, and why',
+      'Nobody forgotten',
+    ])}
+    <div class="rsec">Notifications received</div>${list([
+      'A live summary in Zoho Analytics',
+      'An alert for a paired client with no first session, or a low rating',
+    ])}` },
+
 ];
 
 const EDGES = [
@@ -439,15 +659,20 @@ const EDGES = [
   { from:'back',   fs:'b', to:'follow',  ts:'t', label:'after 15 min' },
   { from:'book',   fs:'b', to:'back2',   ts:'t', label:'backs out', dashed:true, color:'red' },
   { from:'back2',  fs:'b', to:'follow2', ts:'t', label:'after 15 min' },
+
+  { from:'accept', fs:'t', to:'devmsg',    ts:'b', dashed:true },
+  { from:'accept', fs:'t', to:'clientmsg', ts:'b', dashed:true },
+  { from:'accept', fs:'t', to:'coachmsg',  ts:'b', dashed:true },
 ];
 
 /* ---------------- build ---------------- */
 const $ = (s) => document.querySelector(s);
-const viewport = $('#viewport'), world = $('#world'), svg = $('#edges'), frame = $('#frame');
+const viewport = $('#viewport'), world = $('#world'), svg = $('#edges'), frame = $('#frame'), frame2 = $('#frame2');
 const NS = 'http://www.w3.org/2000/svg';
 const els = {};
 
 for (const n of NODES) {
+  const meta = WHO[n.id] ? [['Who', WHO[n.id]], ...(n.meta || [])] : n.meta;
   const d = document.createElement('article');
   d.className = `node k-${n.kind}${n.pending ? ' pending' : ''}`;
   d.dataset.id = n.id;
@@ -462,7 +687,7 @@ for (const n of NODES) {
     (n.shots || []).map(([src, cap]) =>
       `<figure class="shot"><img src="${IMG + src}" alt="${cap || n.title}" draggable="false">${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`).join('') +
     (n.extra || '') +
-    (n.meta ? `<div class="meta">${n.meta.map(([k, v]) => `<div class="mrow"><span class="mk">${k}</span><span>${v}</span></div>`).join('')}</div>` : '') +
+    (meta ? `<div class="meta">${meta.map(([k, v]) => `<div class="mrow"><span class="mk">${k}</span><span>${v}</span></div>`).join('')}</div>` : '') +
     `</div>`;
   world.appendChild(d);
   els[n.id] = d;
@@ -481,6 +706,16 @@ function place() {
     const [ref, gap] = n.below, r = els[ref];
     els[n.id].style.top = (r.offsetTop + r.offsetHeight + gap) + 'px';
   }
+  // A card stacked above another one grows upward from it.
+  for (const n of NODES) {
+    if (!n.above) continue;
+    const [ref, gap] = n.above, r = els[ref];
+    els[n.id].style.top = (r.offsetTop - gap - els[n.id].offsetHeight) + 'px';
+  }
+  // The "Who uses this journey" lane sits under every other card.
+  let low = 0;
+  for (const n of NODES) if (!n.lane) low = Math.max(low, els[n.id].offsetTop + els[n.id].offsetHeight);
+  for (const n of NODES) if (n.lane) els[n.id].style.top = (low + 260) + 'px';
 }
 
 const rect = (id) => { const e = els[id]; return { x:e.offsetLeft, y:e.offsetTop, w:e.offsetWidth, h:e.offsetHeight }; };
@@ -519,12 +754,19 @@ function drawEdges() {
 }
 
 let bounds = { x:0, y:0, w:1, h:1 };
-function layoutFrame() {
+// Frame the cards of one group (the journey, or the lane) and return its box.
+function frameOf(el, group) {
   let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-  for (const n of NODES) { const r = rect(n.id); x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h); }
+  for (const n of group) { const r = rect(n.id); x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h); }
   const pad = 70;
-  bounds = { x:x0 - pad, y:y0 - pad, w:x1 - x0 + pad*2, h:y1 - y0 + pad*2 };
-  Object.assign(frame.style, { left:bounds.x + 'px', top:bounds.y + 'px', width:bounds.w + 'px', height:bounds.h + 'px' });
+  const box = { x:x0 - pad, y:y0 - pad, w:x1 - x0 + pad*2, h:y1 - y0 + pad*2 };
+  Object.assign(el.style, { left:box.x + 'px', top:box.y + 'px', width:box.w + 'px', height:box.h + 'px' });
+  return box;
+}
+function layoutFrame() {
+  const a = frameOf(frame, NODES.filter((n) => !n.lane)), b = frameOf(frame2, NODES.filter((n) => n.lane));
+  const x0 = Math.min(a.x, b.x), y0 = Math.min(a.y, b.y), x1 = Math.max(a.x + a.w, b.x + b.w), y1 = Math.max(a.y + a.h, b.y + b.h);
+  bounds = { x:x0, y:y0, w:x1 - x0, h:y1 - y0 };
 }
 function relayout() { place(); layoutFrame(); drawEdges(); }
 
