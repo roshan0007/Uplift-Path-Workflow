@@ -280,10 +280,10 @@ const WHO = {
   note:'Clinician / assessor',
   adone:'Clinician / assessor',
   prefs:'Clinician / assessor',
-  sugg:'Clinician / assessor and managers read the list',
+  sugg:'Clinician / assessor and clinical managers read the list',
   offer:'Assessor sends; the coaches are told',
-  accept:'Coach acts; managers and info@ are told',
-  coach:'Coach; the client and managers are told',
+  accept:'Coach acts; clinical managers and info@ are told',
+  coach:'Coach; the client and clinical managers are told',
 };
 
 const NODES = [
@@ -479,7 +479,7 @@ const NODES = [
       'Intake team',
       'Clinician / assessor',
       'Coach',
-      'Manager',
+      'Clinical manager',
       'Leadership',
     ])}` },
 
@@ -586,7 +586,7 @@ const NODES = [
     <div class="rsec">Guides</div>${guide('Accepting a client and updating your capacity')}` },
 
   { id:'r-manager', kind:'role', lane:true, x:2280, w:420, tag:'Role',
-    title:'Manager',
+    title:'Clinical manager',
     body:'The clinical and operations leads who keep pairing and workload on track. They watch offers and acceptances, step in when a client is waiting, and keep caseloads balanced.',
     extra:`<div class="rsec">What you do</div>${steps([
       'Review coach suggestions and offers on each contact',
