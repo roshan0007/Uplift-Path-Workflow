@@ -395,7 +395,7 @@ const NODES = [
     shots:[['25-crm-accept-log.png', 'Automation Logs: Accepted, and a later accept logged as Too late'], ['26-crm-coach-after-accept.png', 'The coach after accepting: caseload up by one, client listed under Paired Clients']],
     meta:[['Built','CRM side, tested with test coaches: accept, late accept, decline, read-only check; an email to info@ when a client is paired'],['Not built','The website page; a message to the client; an alert to Julia when a coach accepts or when everyone declines; re-offering if nobody answers']] },
 
-  { id:'coach', kind:'crm', x:7360, y:300, w:400, tag:'15 · Zoho CRM',
+  { id:'coach', kind:'crm', x:7920, y:300, w:400, tag:'15 · Zoho CRM',
     title:'Coaching starts (feedback form sent)',
     status:{ t:'Active Coaching', c:'s9', note:'set when the start date is filled' },
     body:'When coaching begins, the <b>Coaching Start Date</b> is filled on the contact and the status becomes <b>Active Coaching</b>. The date means the first session has happened, so the client is sent a short <b>feedback survey</b> about that session right away (shown below). Later, this is where the client starts to count in the coach&rsquo;s caseload.',
@@ -416,7 +416,7 @@ const NODES = [
     body:'Both go out once the time is confirmed. The SMS links to <b>Step 4 &ndash; Consent Form</b>, the last step before the session is confirmed. The email confirms Medicaid details are in and gives the appointment time, with <b>Join Now</b>, <b>Reschedule Now</b> and <b>Cancel Now</b> buttons.',
     shots:[['06-sms-booked.png', 'SMS'], ['10-email-booked.png', 'Email']] },
 
-  { id:'donemsg', kind:'msg', x:2840, bottom:220, w:420, tag:'SMS + Email · on signing',
+  { id:'donemsg', kind:'msg', x:2600, bottom:220, w:420, tag:'SMS + Email · on signing',
     title:'Enrollment complete',
     body:'The SMS says they are all set and the session is confirmed. The email attaches the <b>signed consent form as a PDF</b>.',
     shots:[['11-sms-consent.png', 'SMS'], ['12-email-signed-consent.png', 'Email with signed PDF']] },
@@ -463,11 +463,13 @@ const NODES = [
   { id:'fb1msg', kind:'msg', x:4720, bottom:220, w:420, tag:'SMS + Email to the client · after the assessment · built, tested with a test client',
     title:'Feedback survey after the assessment',
     body:'<b>Subject:</b> How was your experience with Uplift Path?<br>Sent to the client by email and SMS as soon as the status becomes <b>Assessment Done</b>. It thanks them and links to a short survey (about 2 minutes, 7 questions, nothing clinical) about signing up, the messages they received and the assessment. The link carries the <b>case ID</b>, so each answer can be tied back to the client. Placeholder email addresses are skipped. Every send is logged on the contact under <b>Automation Logs</b> (Feedback, Assessment Done).<br><b>If it did not go out</b>, staff can send it by hand with the <b>Send Assessment Survey</b> button on the contact.',
+    shots:[['32-sms-feedback-assessment.png', 'SMS'], ['31-email-feedback-assessment.webp', 'Email']],
     meta:[['Tool','Zoho Survey, sent from Zoho CRM'],['By hand','Button on the contact: Send Assessment Survey'],['Not built yet','Answers shown on the client record in the CRM']] },
 
-  { id:'fb2msg', kind:'msg', x:7360, below:['coach', 160], w:440, tag:'SMS + Email to the client · after the first session · built, tested with a test client',
+  { id:'fb2msg', kind:'msg', x:7920, below:['coach', 160], w:440, tag:'SMS + Email to the client · after the first session · built, tested with a test client',
     title:'Feedback survey after the first session',
     body:'<b>Subject:</b> How was your first session with your Uplift Coach?<br>Sent to the client by email and SMS the first time the <b>Coaching Start Date</b> is filled in. It links to a short survey (about 2 minutes, 6 questions, nothing clinical) about the first session with the coach. The link carries the <b>case ID</b>. If the date entered is in the future, nothing is sent and that is logged. Changing the date later does not send it again. Every send is logged on the contact under <b>Automation Logs</b> (Feedback, First Session).<br><b>If it did not go out</b> (for example nobody entered the date), staff can send it by hand with the <b>Send Session Survey</b> button on the contact.',
+    shots:[['34-sms-feedback-session.png', 'SMS'], ['33-email-feedback-session.webp', 'Email']],
     meta:[['Tool','Zoho Survey, sent from Zoho CRM'],['By hand','Button on the contact: Send Session Survey'],['Not built yet','Answers shown on the client record in the CRM']] },
 
   { id:'clientmsg', kind:'msg', x:7360, bottom:220, w:440, tag:'Email to the client · when a client is paired',
