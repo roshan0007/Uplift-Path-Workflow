@@ -364,7 +364,7 @@ const NODES = [
   { id:'adone', kind:'crm', x:4720, y:300, w:400, tag:'10 · Zoho CRM',
     title:'Marks the assessment done in CRM',
     status:{ t:'Assessment Done', c:'s6', note:'set when the date is filled' },
-    body:'After the assessment, the assessor fills <b>Assessment Done On</b> (a date) in the <b>Assessment</b> section of the contact. That moves the status. It is a manual entry, separate from the note in Charm.',
+    body:'After the assessment, the assessor fills <b>Assessment Done On</b> (a date) in the <b>Assessment</b> section of the contact. That moves the status. It is a manual entry, separate from the note in Charm. The client then gets a <b>feedback survey</b> (shown above).',
     meta:[['Owner','Assessor (Julia)'],['Field','Assessment Done On']] },
 
   { id:'prefs', kind:'crm', x:5240, y:300, w:400, tag:'11 · Zoho CRM',
@@ -395,10 +395,10 @@ const NODES = [
     shots:[['25-crm-accept-log.png', 'Automation Logs: Accepted, and a later accept logged as Too late'], ['26-crm-coach-after-accept.png', 'The coach after accepting: caseload up by one, client listed under Paired Clients']],
     meta:[['Built','CRM side, tested with test coaches: accept, late accept, decline, read-only check; an email to info@ when a client is paired'],['Not built','The website page; a message to the client; an alert to Julia when a coach accepts or when everyone declines; re-offering if nobody answers']] },
 
-  { id:'coach', kind:'crm', x:7360, y:300, w:400, tag:'15 · Zoho CRM',
-    title:'Coaching starts',
+  { id:'coach', kind:'crm', x:7920, y:300, w:400, tag:'15 · Zoho CRM',
+    title:'Coaching starts (feedback form sent)',
     status:{ t:'Active Coaching', c:'s9', note:'set when the start date is filled' },
-    body:'When coaching begins, the <b>Coaching Start Date</b> is filled on the contact and the status becomes <b>Active Coaching</b>. Later, this is where the client starts to count in the coach&rsquo;s caseload.',
+    body:'When coaching begins, the <b>Coaching Start Date</b> is filled on the contact and the status becomes <b>Active Coaching</b>. The client then gets a <b>feedback survey</b> about the first session (shown below). Later, this is where the client starts to count in the coach&rsquo;s caseload.',
     meta:[['Owner','Coach'],['Field','Coaching Start Date']] },
 
   /* ---- above the row: what fires automatically (bottom-anchored) ---- */
@@ -416,7 +416,7 @@ const NODES = [
     body:'Both go out once the time is confirmed. The SMS links to <b>Step 4 &ndash; Consent Form</b>, the last step before the session is confirmed. The email confirms Medicaid details are in and gives the appointment time, with <b>Join Now</b>, <b>Reschedule Now</b> and <b>Cancel Now</b> buttons.',
     shots:[['06-sms-booked.png', 'SMS'], ['10-email-booked.png', 'Email']] },
 
-  { id:'donemsg', kind:'msg', x:2840, bottom:220, w:420, tag:'SMS + Email · on signing',
+  { id:'donemsg', kind:'msg', x:2600, bottom:220, w:420, tag:'SMS + Email · on signing',
     title:'Enrollment complete',
     body:'The SMS says they are all set and the session is confirmed. The email attaches the <b>signed consent form as a PDF</b>.',
     shots:[['11-sms-consent.png', 'SMS'], ['12-email-signed-consent.png', 'Email with signed PDF']] },
@@ -459,6 +459,24 @@ const NODES = [
     title:'Email to Devyani when a client is paired',
     body:'<b>Subject:</b> Client paired: UPW-123 with (coach name)<br>Devyani receives the same email as the info@ mailbox, every time a client is paired, whether a coach accepts on the website or the team sets <b>Paired Coach</b> by hand. It carries the <b>case ID</b>, the <b>coach&rsquo;s name</b> and a link to the client record in the CRM. No client name or contact details are in the email.',
     shots:[['28-email-info-client-paired.png', 'The same email, as info@ receives it (CRM link hidden)']] },
+
+  { id:'fb1msg', kind:'msg', x:4720, bottom:220, w:420, tag:'SMS + Email · after the assessment · built, tested',
+    title:'Feedback survey after the assessment',
+    body:'<b>Subject:</b> How was your experience with Uplift Path?<br>Sent to the client when the status becomes <b>Assessment Done</b>. It links to a 2-minute survey (7 questions, nothing clinical). The link carries the <b>case ID</b>.',
+    shots:[['32-sms-feedback-assessment.png', 'SMS'], ['31-email-feedback-assessment.webp', 'Email']],
+    meta:[['Tool','Zoho Survey, sent from Zoho CRM'],['Not sent?','Send it by hand with the button (card under step 15)']] },
+
+  { id:'fb2msg', kind:'msg', x:7920, below:['coach', 160], w:440, tag:'SMS + Email · after the first session · built, tested',
+    title:'Feedback survey after the first session',
+    body:'<b>Subject:</b> How was your first session with your Uplift Coach?<br>Sent to the client the first time the <b>Coaching Start Date</b> is filled in. It links to a 2-minute survey (6 questions, nothing clinical). The link carries the <b>case ID</b>. A date in the future sends nothing.',
+    shots:[['34-sms-feedback-session.png', 'SMS'], ['33-email-feedback-session.webp', 'Email'], ['37-crm-survey-log.png', 'Automation Logs: each send, and a future date skipped']],
+    meta:[['Tool','Zoho Survey, sent from Zoho CRM']] },
+
+  { id:'fbmanual', kind:'crm', x:7920, below:['fb2msg', 120], w:440, tag:'Zoho CRM · button · built, tested',
+    title:'Send a survey by hand',
+    body:'If a survey did not go out (for example nobody entered the date), open the contact and pick <b>Send Assessment Survey</b> or <b>Send Session Survey</b> from the button menu. The same email and SMS go out right away, and the log marks it as <b>manual</b>.',
+    shots:[['35-crm-survey-buttons.png', 'The two buttons on the contact'], ['36-crm-survey-log-manual.png', 'Automation Logs: a send by hand']],
+    meta:[['Who','Staff with access to the contact']] },
 
   { id:'clientmsg', kind:'msg', x:7360, bottom:220, w:440, tag:'Email to the client · when a client is paired',
     title:'Email to the client: meet your Uplift Coach',
@@ -663,6 +681,9 @@ const EDGES = [
   { from:'accept', fs:'t', to:'devmsg',    ts:'b', dashed:true },
   { from:'accept', fs:'t', to:'clientmsg', ts:'b', dashed:true },
   { from:'accept', fs:'t', to:'coachmsg',  ts:'b', dashed:true },
+  { from:'adone',  fs:'t', to:'fb1msg',    ts:'b', dashed:true },
+  { from:'coach',  fs:'b', to:'fb2msg',    ts:'t', dashed:true },
+  { from:'fb2msg', fs:'b', to:'fbmanual',  ts:'t', label:'not sent?', dashed:true },
 ];
 
 /* ---------------- build ---------------- */
